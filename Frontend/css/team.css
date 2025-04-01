@@ -1,0 +1,89 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+}
+
+.navbar {
+    display: flex;
+    justify-content: center;
+    background-color: #333;
+    padding: 15px;
+    position: relative;
+}
+
+    .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px 20px;
+        margin: 0 10px;
+        border-radius: 5px;
+    }
+
+        .navbar a:hover {
+            background-color: #555;
+        }
+
+.team-container {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(to right, #6a11cb, #2575fc); 
+    min-height: 100vh;
+}
+
+.team-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.azul-logo {
+    width: 50px;
+    margin-right: 20px;
+}
+
+.team-container h1 {
+    color: white;
+    font-size: 2.5em;
+}
+
+.team-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.team-member {
+    background: white;
+    padding: 15px;
+    margin: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    width: 220px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+    .team-member:hover {
+        transform: translateY(-10px);
+    }
+
+    .team-member img {
+        width: 150px; 
+        height: 150px; 
+        object-fit: cover; 
+        border-radius: 50%; 
+        margin-bottom: 10px;
+    }
+
+    .team-member h2 {
+        font-size: 1.2em;
+        margin: 5px 0;
+    }
+
+    .team-member p {
+        font-size: 0.9em;
+        color: #666;
+    }
