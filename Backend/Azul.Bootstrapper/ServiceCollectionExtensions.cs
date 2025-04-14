@@ -37,6 +37,8 @@ public static class ServiceCollectionExtensions
 
                 options.SignIn.RequireConfirmedEmail = false;
                 options.SignIn.RequireConfirmedPhoneNumber = false;
+
+                options.User.RequireUniqueEmail = true;
             })
             .AddEntityFrameworkStores<AzulDbContext>()
             .AddDefaultTokenProviders();
