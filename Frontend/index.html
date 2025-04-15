@@ -1,10 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Onitama</title>
-  </head>
-  <body>
-    
-  </body>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/index.css">
+  <title>Login</title>
+</head>
+<body>
+<div class="navbar">
+  <a href="register.html">Registreer</a>
+  <a href="team.html">Ons Team</a>
+</div>
+
+<div class="login-container">
+  <div class="image-container">
+    <img src="images/azul.png" alt="Login Image" class="login-image">
+  </div>
+  <div class="form-card">
+    <h1>Inloggen</h1>
+    <form id="login-form">
+      <label for="email">E-mailadres:</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="password">Wachtwoord:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Log in</button>
+    </form>
+    <div id="error-message" class="error-message" style="display: none;"></div>
+  </div>
+</div>
+
+<script src="js/login.js"></script>
+</body>
 </html>
