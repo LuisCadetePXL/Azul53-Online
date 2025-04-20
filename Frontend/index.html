@@ -5,6 +5,61 @@
     <title>Onitama</title>
   </head>
   <body>
+
+
     
+HTML code
   </body>
+</html>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registreren</title>
+  <link rel="stylesheet" href="register.css">
+  <script src="js/register.js" defer></script>
+</head>
+<body>
+<nav class="navbar">
+  <img src="images/img.png" alt="Azul Logo" class="azul-logo">
+  <div class="nav-links">
+    <a href="index.html">Login</a>
+    <a href="team.html">Ons Team</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="form-box">
+    <h1>Registreer je</h1>
+    <form id="signup-form">
+      <div class="form-group">
+        <label for="email">E-mailadres:</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label for="username">Gebruikersnaam:</label>
+        <input type="text" id="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Wachtwoord:</label>
+        <input type="password" id="password" required>
+      </div>
+      <div class="form-group">
+        <label for="passwordVerify">Bevestig wachtwoord:</label>
+        <input type="password" id="passwordVerify" required>
+      </div>
+      <div class="form-group">
+        <label for="visitDate">Laatste verblijf in Portugal (optioneel):</label>
+        <input type="date" id="visitDate">
+      </div>
+      <button type="submit" class="btn">Registreer</button>
+    </form>
+
+    <div id="error-message" class="error-message"></div>
+  </div>
+</div>
+
+<script src="js/register.js" defer></script>
+</body>
 </html>
