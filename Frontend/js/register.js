@@ -22,6 +22,11 @@ function handleSubmit(e) {
         return showError("Gelieve alle verplichte velden in te vullen.");
     }
 
+    // Validatie: e-mailadres moet geldig zijn
+    if (!validateEmail(email)) {
+        return showError("Vul een geldig e-mailadres in.");
+    }
+
     // Validatie: wachtwoorden komen niet overeen
     if (password !== passwordVerify) {
         return showError("Wachtwoorden komen niet overeen.");
@@ -38,6 +43,10 @@ function handleSubmit(e) {
     }
 
     registerUser(email, username, password, visitDate);
+}
+
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function registerUser(email, username, password, visitDate) {
