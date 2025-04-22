@@ -4,10 +4,10 @@ using Azul.Core.PlayerAggregate.Contracts;
 namespace Azul.Core.PlayerAggregate;
 
 /// <inheritdoc cref="IPlayer"/>
-internal class HumanPlayer
+internal class HumanPlayer : PlayerBase
 {
-    public HumanPlayer(Guid userId, string name, DateOnly? lastVisitToPortugal)
+    public HumanPlayer(Guid id, string name, DateOnly? lastVisitToPortugal)
+        : base(id, name, lastVisitToPortugal)
     {
-
     }
 }
