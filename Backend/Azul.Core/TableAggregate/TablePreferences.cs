@@ -7,13 +7,25 @@ namespace Azul.Core.TableAggregate
     public class TablePreferences : ITablePreferences
     {
 
+        public TablePreferences()
+        {
+            NumberOfPlayers = 2;
+            NumberOfArtificialPlayers = 0;
+        }
+
         [DefaultValue(2)]
         public int NumberOfPlayers { get; set; }
 
         [DefaultValue(0)]
         public int NumberOfArtificialPlayers { get; set; }
 
-        public int NumberOfFactoryDisplays { get; }
+        public int NumberOfFactoryDisplays
+        {
+            get
+            {
+                return 2 * NumberOfPlayers + 1;
+            }
+        }
 
 
         //DO NOT CHANGE THE CODE BELOW, unless (maybe) when you are working on EXTRA requirements
@@ -21,7 +33,7 @@ namespace Azul.Core.TableAggregate
         {
             if (other is ITablePreferences otherPreferences)
             {
-                if( NumberOfPlayers != otherPreferences.NumberOfPlayers) return false;
+                if (NumberOfPlayers != otherPreferences.NumberOfPlayers) return false;
                 if (NumberOfArtificialPlayers != otherPreferences.NumberOfArtificialPlayers) return false;
             }
             return true;
