@@ -38,6 +38,16 @@ internal class InMemoryTableRepository : ITableRepository
         //TODO: loop over all tables (user the Values property of _tableDictionary)
         //and check if those tables have the same preferences and have seats available.
         //Put the tables that have the same preferences and have seats available in a list and return that list.
-        throw new System.NotImplementedException();
+        var result = new List<ITable>();
+
+        foreach (var table in _tableDictionary.Values)
+        {
+            if (table.HasAvailableSeat && table.Preferences.Equals(preferences))
+            {
+                result.Add(table);
+            }
+        }
+
+        return result;
     }
 }
