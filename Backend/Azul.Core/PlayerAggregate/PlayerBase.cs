@@ -23,7 +23,7 @@ internal abstract class PlayerBase : IPlayer
         LastVisitToPortugal = lastVisitToPortugal;
         HasStartingTile = false;
         TilesToPlace = new List<TileType>();
-        Board = new Board(); // 🛠️ fix voor de test
+        IBoard board = (IBoard)new Board();
     }
 
 }
