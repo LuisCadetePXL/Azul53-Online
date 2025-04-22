@@ -11,6 +11,7 @@ using Azul.Core.TableAggregate;
 using Azul.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -43,12 +44,17 @@ public abstract class ControllerIntegrationTestsBase<TController> where TControl
                 services.Remove(descriptor);
             }
 
+            // Build configuration to read from testsettings.json and environment variables
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("testsettings.json", optional: false)
+                .AddEnvironmentVariables()
+                .Build();
+
             // Replace the database with test database
             services.AddDbContext<AzulDbContext>(options =>
             {
-                options.UseSqlServer(
-                        "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AzulDb_IntegrationTest;Integrated Security=True")
-                    .EnableSensitiveDataLogging(true);
+                string connectionString = configuration.GetConnectionString("TestDatabase")!;
+                options.UseSqlServer(connectionString).EnableSensitiveDataLogging(true);
             });
 
             // Make sure the test database is deleted before each test run

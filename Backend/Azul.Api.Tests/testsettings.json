@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": {
+    "TestDatabase": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=AzulDb_IntegrationTest;Integrated Security=True"
+  }
+}
