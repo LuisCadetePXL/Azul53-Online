@@ -48,7 +48,7 @@ internal class Table : ITable
 
         if (!HasAvailableSeat)
         {
-            throw new InvalidOperationException("No available seats at the table.");
+            throw new InvalidOperationException("The table is full.");
         }
 
         if (_seatedPlayers.Any(p => p.Id == user.Id))
@@ -56,7 +56,8 @@ internal class Table : ITable
             throw new InvalidOperationException("User is already seated at the table.");
         }
 
-        _seatedPlayers.Add((IPlayer)user);
+        IPlayer player = new HumanPlayer(user.Id, user.UserName, user.LastVisitToPortugal);
+        _seatedPlayers.Add(player);
     }
 
     public void Leave(Guid userId)

@@ -39,17 +39,11 @@ internal class TableManager : ITableManager
             _tableRepository.Add(newTable);
             return newTable;
         }
-        else
-        {
-            ITable avalaibleTable = avalaibleTables.FirstOrDefault();
-            if (avalaibleTable == null)
-            {
-                throw new InvalidOperationException("No available table found despite repository returning results.");
-            }
 
-            avalaibleTable.Join(user);
-            return avalaibleTable;
-        }
+        ITable tableToJoin = avalaibleTables.FirstOrDefault(table => table.HasAvailableSeat);
+        tableToJoin.Join(user);
+        return tableToJoin;
+
 
         //Find a table with available seats that matches the given preferences
         //If no table is found, create a new table. Otherwise, take the first available table
