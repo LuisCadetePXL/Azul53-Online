@@ -1,7 +1,9 @@
 ﻿using Azul.Core.GameAggregate.Contracts;
+using Azul.Core.PlayerAggregate;
 using Azul.Core.PlayerAggregate.Contracts;
 using Azul.Core.TableAggregate.Contracts;
 using Azul.Core.UserAggregate;
+using System.Security;
 
 namespace Azul.Core.TableAggregate;
 
@@ -30,20 +32,67 @@ internal class TableManager : ITableManager
 
     public ITable JoinOrCreateTable(User user, ITablePreferences preferences)
     {
+        IList<ITable> avalaibleTables = _tableRepository.FindTablesWithAvailableSeats(preferences);
+
+        if (avalaibleTables.Count == 0) {
+            ITable newTable = _tableFactory.CreateNewForUser(user, preferences);
+            _tableRepository.Add(newTable);
+            return newTable;
+        }
+        else
+        {
+            ITable avalaibleTable = avalaibleTables.FirstOrDefault();
+            if (avalaibleTable == null)
+            {
+                throw new InvalidOperationException("No available table found despite repository returning results.");
+            }
+
+            avalaibleTable.Join(user);
+            return avalaibleTable;
+        }
+
         //Find a table with available seats that matches the given preferences
         //If no table is found, create a new table. Otherwise, take the first available table
-        throw new NotImplementedException();
+
     }
 
     public void LeaveTable(Guid tableId, User user)
     {
-        throw new NotImplementedException();
+        ITable currentTable = GetCurrentTable(tableId);
+        currentTable.Leave(user.Id);
+        if (currentTable.SeatedPlayers.Count == 0)
+        {
+            _tableRepository.Remove(tableId);
+        }
     }
 
 
+    private ITable GetCurrentTable(Guid tableId) {
+       ITable tabel =  _tableRepository.Get(tableId);
+        if (tabel == null)
+        {
+            throw new Exception($"Table with ID {tableId} not found.");
+        }
+        return tabel;
+    }
+
+    private IGame CreateGame(ITable currentTable)
+    {
+        IGame newGame = _gameFactory.CreateNewForTable(currentTable);
+        _gameRepository.Add(newGame);
+        return newGame;
+    }
+
     public IGame StartGameForTable(Guid tableId)
     {
-        throw new NotImplementedException();
+        ITable currentTable = GetCurrentTable(tableId);
+        if (currentTable.SeatedPlayers.Count < currentTable.Preferences.NumberOfPlayers)
+        {
+            throw new InvalidOperationException("There are not enough players to start a game.");
+        }
+        IGame newGame = CreateGame(currentTable);
+        currentTable.GameId = newGame.Id;
+        return newGame;
     }
 
     public void FillWithArtificialPlayers(Guid tableId, User user)

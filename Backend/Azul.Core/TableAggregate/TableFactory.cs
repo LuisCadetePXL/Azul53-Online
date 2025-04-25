@@ -8,6 +8,9 @@ internal class TableFactory : ITableFactory
 {
     public ITable CreateNewForUser(User user, ITablePreferences preferences)
     {
-        throw new NotImplementedException();
+        ITable table =  new Table(user.Id, preferences);
+        return table;
+       
     }
+
 }
