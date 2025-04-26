@@ -129,6 +129,38 @@
     transform: translateX(5px);
 }
 
+.table-card {
+    background-color: #f9f9f9;
+    border: 2px solid #0077cc;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.table-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.leave-button {
+    margin-top: 15px;
+    background-color: #ff4d4d;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.leave-button:hover {
+    background-color: #cc0000;
+}
+
+
 
 
 

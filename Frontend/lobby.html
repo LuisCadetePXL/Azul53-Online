@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -6,32 +7,33 @@
     <link rel="stylesheet" href="css/lobby.css">
 </head>
 <body>
-    <div class="navbar">
-        <img src="images/azul.png" alt="Azul logo" class="logo">
-        <button id="logOutButton" class="logout-button">Uitloggen</button>
-    </div>
+<div class="navbar">
+    <img src="images/azul.png" alt="Azul logo" class="logo">
+    <button id="logOutButton" class="logout-button">Uitloggen</button>
+</div>
 
-    <main class="lobby">
-        <section class="create-table">
-            <h2>Kies het aantal spelers</h2>
-            <select class="playerCountSelect">
-                <option value="aantal spelers">Aantal spelers</option>
-                <option value="2">2 spelers</option>
-                <option value="3">3 spelers</option>
-                <option value="4">4 spelers</option>
-            </select>
-            <button id="createTableButton">Start spel</button>
-        </section>
-         
+<main class="lobby">
+    <section class="create-table">
+        <h2>Kies het aantal spelers</h2>
+        <select class="playerCountSelect">
+            <option value="" disabled selected hidden>Aantal spelers</option>
+            <option value="2">2 spelers</option>
+            <option value="3">3 spelers</option>
+            <option value="4">4 spelers</option>
+        </select>
+        <button id="createTableButton">Zoek Tafel</button>
+        <p class="errorMessage"></p>
+    </section>
 
-        <section class="tables-section">
-            <h2>Beschikbare tafels</h2>
-            <div id="tablesList"></div>
-        </section>
-    </main>
 
-    <a href="https://www.brdgmz.nl/wp-content/uploads/Spelregels-Azul.pdf" target="_blank" class="rules-button">📘 Spelregels</a>
+    <section class="tables-section">
+        <h2>Beschikbare tafels</h2>
+        <div id="tablesList"></div>
+    </section>
+</main>
 
-    <script src="js/lobby.js"></script>
+<a href="https://www.brdgmz.nl/wp-content/uploads/Spelregels-Azul.pdf" target="_blank" class="rules-button">📘 Spelregels</a>
+
+<script src="js/lobby.js"></script>
 </body>
 </html>
