@@ -12,6 +12,26 @@ internal class Board : IBoard
     public int Score { get; private set; } = 0;
     public bool HasCompletedHorizontalLine => false;
 
+    public Board()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            PatternLines[i] = new PatternLine(i + 1); // Lijnlengtes 1 tot 5
+        }
+
+        for (int i = 0;i < 5; i++)
+        {
+            for (int k = 0; k < 5; k++) {
+                Wall[i, k] = new TileSpot((TileType)(15+k-i));
+            }
+        }
+
+        for (int i = 0; i < 7; i++)
+        {
+            FloorLine[i] = new TileSpot();
+        }
+    }
+
     public void AddTilesToPatternLine(IReadOnlyList<TileType> tilesToAdd, int patternLineIndex, ITileFactory tileFactory)
     {
         // dummy
