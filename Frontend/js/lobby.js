@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (text) {
                 const tableData = JSON.parse(text);
                 console.log('Tafel gevonden/gemaakt:', tableData);
+                console.log('Tafel gevonden/gemaakt:', tableData.hasav);
                 displayTable(tableData);
             } else {
                 console.error('Lege response ontvangen.');
@@ -144,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getTableData(tableId) {
-        console.log("kk");
+        console.log(tableData);
         try {
             const response = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
                 method: 'GET',
