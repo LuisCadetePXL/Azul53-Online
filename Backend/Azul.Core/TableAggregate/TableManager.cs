@@ -54,7 +54,7 @@ internal class TableManager : ITableManager
     {
         ITable currentTable = GetCurrentTable(tableId);
         currentTable.Leave(user.Id);
-        if (currentTable.SeatedPlayers.Count == 0)
+        if (currentTable.SeatedPlayers.Count <= 0)
         {
             _tableRepository.Remove(tableId);
         }
