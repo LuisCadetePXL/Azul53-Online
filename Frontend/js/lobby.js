@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(request)
             });
@@ -38,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (text) {
                 const tableData = JSON.parse(text);
                 console.log('Tafel gevonden/gemaakt:', tableData);
-                console.log('Tafel gevonden/gemaakt:', tableData.hasav);
                 displayTable(tableData);
             } else {
                 console.error('Lege response ontvangen.');
@@ -67,7 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             for (let i = 0; i < seatedPlayers; i++) {
                 const player = tableData.seatedPlayers[i];
-                tableCard.innerHTML += ` <p>${player.name}</p>`;
+                const playerName = player.name || player.userName || "Onbekende speler";
+                tableCard.innerHTML += ` <p>${playerName}</p>`;
             }
 
             const leaveButton = document.createElement('button');
@@ -96,13 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
             tableCard.appendChild(leaveButton);
             tablesList.appendChild(tableCard);
 
-            setInterval(() => {
-                getTableData(tableData.id);
-            }, 1000);
-        }
-
-        if (tableData.seatedPlayers.length >= tableData.preferences.numberOfPlayers) {
-            window.location.href = "game.html";
+            const checkTableInterval = setInterval(() => {
+                getTableData(tableData.id, checkTableInterval);
+            }, 1000);  
         }
     }
 
@@ -119,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const player = tableData.seatedPlayers[i];
             tableCard.innerHTML += ` <p>${player.name}</p>`;
         }
+
         const leaveButton = document.createElement('button');
         leaveButton.textContent = 'Tafel verlaten';
         leaveButton.classList.add('leave-button');
@@ -144,8 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tableCard.appendChild(leaveButton);
     }
 
-    async function getTableData(tableId) {
-        console.log(tableData);
+    async function getTableData(tableId, checkTableInterval) {
         try {
             const response = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
                 method: 'GET',
@@ -159,6 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const existingTable = document.getElementById(`table-${tableData.id}`);
                 if (existingTable) {
                     updateTable(existingTable, tableData);
+                }
+
+                if (tableData.seatedPlayers.length >= tableData.preferences.numberOfPlayers) {
+                    clearInterval(checkTableInterval);
+                    window.location.href = "game.html";
                 }
             } else {
                 console.error('Fout bij ophalen tafel:', response.status);
