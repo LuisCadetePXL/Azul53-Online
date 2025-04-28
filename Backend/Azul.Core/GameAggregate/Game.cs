@@ -18,6 +18,6 @@ internal class Game
     /// <param name="players">The players that will play the game</param>
     public Game(Guid id, ITileFactory tileFactory, IPlayer[] players)
     {
-        throw new NotImplementedException();
+        
     }
 }
