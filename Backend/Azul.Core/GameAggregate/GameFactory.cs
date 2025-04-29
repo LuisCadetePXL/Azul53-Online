@@ -11,6 +11,17 @@ internal class GameFactory : IGameFactory
 {
     public IGame CreateNewForTable(ITable table)
     {
-        throw new NotImplementedException();
+        IPlayer[] playerList =  new IPlayer[table.SeatedPlayers.Count];
+        for (int i = 0; i < table.SeatedPlayers.Count; i++)
+        {
+            playerList[i] = table.SeatedPlayers[i];
+        }
+
+        ITileBag tileBag = new TileBag();
+        ITileFactory tileFactory = new TileFactory(5, tileBag);
+
+       IGame game = new Game(Guid.NewGuid(),tileFactory,playerList);
+
+        return game;
     }
 }
