@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logOutButton');
     const token = sessionStorage.getItem('token');
     const tableIntervals = new Map();
+    const playerNameContainer = document.getElementById('playerName');
+    const PlayerName = sessionStorage.getItem('username');
+
+    playerNameContainer.innerHTML = `${PlayerName}`;
 
     createTableButton.addEventListener('click', async () => {
         const selectedValue = playerCountSelect.value;
@@ -178,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     logoutButton.addEventListener('click', () => {
         sessionStorage.removeItem('token');
+        sessionStorage.removeItem('username');
         window.location.href = 'index.html';
     });
 });

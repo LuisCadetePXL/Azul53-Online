@@ -1,15 +1,16 @@
 ﻿body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Arial', sans-serif;
     margin: 0;
-    background-color: #74fde7;
+    padding: 0;
+    background: linear-gradient(to right, #6a11cb, #2575fc);
 }
 
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #014d4e;
-    padding: 15px 30px;
+    background-color: #333;
+    padding: 10px;
 }
 
 .logo {
@@ -56,15 +57,15 @@
     transition: border-color 0.3s ease;
 }
 
-    .playerCountSelect:hover {
-        background-color: #e6ffe6;
-        border-color: #45a049;
-    }
+.playerCountSelect:hover {
+    background-color: #e6ffe6;
+    border-color: #45a049;
+}
 
-    .playerCountSelect:focus {
-        border-color: #2e7d32;
-        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
-    }
+.playerCountSelect:focus {
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+}
 
 .create-table, .tables-section {
     background: white;
@@ -103,15 +104,15 @@
     text-align: center;
 }
 
-    .table button {
-        background: #007b8f;
-        color: white;
-        border: none;
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 6px;
-        cursor: pointer;
-    }
+.table button {
+    background: #007b8f;
+    color: yellow;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
 
 .rules-button {
     position: fixed;
@@ -130,18 +131,51 @@
 }
 
 .table-card {
-    background-color: #f9f9f9;
-    border: 2px solid #0077cc;
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    border: none;
     border-radius: 12px;
     padding: 20px;
     margin: 15px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s, box-shadow 0.2s;
+    color: white;
+}
+
+.content p {
+    color: black;
 }
 
 .table-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.table-card h3 {
+    color: white;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.table-card p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 10px;
+}
+
+.table-card button {
+    background: white;
+    color: #007b8f;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s, color 0.2s;
+}
+
+.table-card button:hover {
+    background-color: #eee;
+    color: #005a6b;
+    transform: scale(1.02);
 }
 
 .leave-button {
@@ -160,10 +194,26 @@
     background-color: #cc0000;
 }
 
+.playerCard {
+    display: flex;
+    align-items: center;
+}
 
+.userFoto-Container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-left: 15px;
+}
 
+.userFoto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-
-
-
-
+.playerName {
+    margin-left: 10px;
+    font-weight: bold;
+}
