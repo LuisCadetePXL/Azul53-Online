@@ -29,6 +29,18 @@ internal class Game : IGame
         RoundNumber = 1;
         PlayerToPlayId = DetermineFirstPlayer(players); 
     }
+    public class Game
+    {
+        public Guid PlayerToPlayId { get; private set; } 
+        public List<Player> Players { get; private set; }
+
+        public Game(List<Player> Players, ITileBag TileBag, ITileFactory tileFactory)
+        {
+            Players = Players;
+
+            PlayerToPlayId = Players.OrderByDescending(p => p.LastVisitToPortugal).First().Id;
+        }
+    }
 
     private readonly Random _random = new Random();
 
