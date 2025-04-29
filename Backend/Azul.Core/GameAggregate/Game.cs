@@ -1,5 +1,5 @@
 ﻿using Azul.Core.GameAggregate.Contracts;
-using Azul.Core.PlayerAggregate;
+using Azul.Core.PlayerAggregate; 
 using Azul.Core.PlayerAggregate.Contracts;
 using Azul.Core.TileFactoryAggregate.Contracts;
 using System;
