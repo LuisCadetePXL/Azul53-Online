@@ -1,0 +1,136 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #74fde7;
+}
+
+.title-bar {
+    padding: 20px;
+    background-color: #1b3b63;
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    font-family: sans-serif;
+}
+
+.board-area {
+    position: relative;
+    width: 76vw;
+    height: 87vh;
+    margin: 20px;
+    background: #a67c52;
+    border: 3px solid black;
+}
+
+.player-board {
+    position: absolute;
+    width: 400px;
+    height: 250px;
+    background-color: #ddd;
+    border: 2px solid #666;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+    flex-direction: column;
+}
+
+.top-left {
+    top: 30px; /* Verhoog de topwaarde om het bord omhoog te verplaatsen */
+    left: 20px;
+}
+
+.top-right {
+    top: 30px; /* Verhoog de topwaarde om het bord omhoog te verplaatsen */
+    right: 20px;
+}
+
+.bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+
+.bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+
+.board-number {
+    font-size: 12px;
+    color: black;
+    margin-top: 2px; /* Verlaag de marge om het bordnummer omhoog te plaatsen */
+    font-weight: bold;
+}
+
+.bordfoto {
+    width: 100%;
+}
+
+.circle {
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    background-color: #bbb;
+    border-radius: 100%;
+    border: 3px solid black;
+}
+
+.circle1 {
+    top: 54px;
+    left: 475px;
+}
+
+.circle2 {
+    top: 54px;
+    left: 625px;
+}
+
+.circle3 {
+    top: 183px;
+    left: 475px;
+}
+
+.circle4 {
+    top: 183px;
+    left: 625px;
+}
+
+.circle5 {
+    top: 312px;
+    left: 550px;
+}
+
+.score-panel {
+    position: absolute;
+    top: 180px;
+    right: 30px;
+    width: 180px;
+    background-color: whitesmoke;
+    border: 2px solid black;
+    border-radius: 8px;
+    padding: 20px;
+    font-family: sans-serif;
+    height: 450px;
+}
+
+.score-title-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.score-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #1b3b63;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
