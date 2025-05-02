@@ -19,7 +19,7 @@ internal class Game : IGame
     /// <param name="players">The players that will play the game</param>
     /// 
 
-    
+
     public Game(Guid id, ITileFactory tileFactory, IPlayer[] players)
     {
         Id = id;
@@ -27,19 +27,17 @@ internal class Game : IGame
         Players = players;
         HasEnded = false;
         RoundNumber = 1;
-        PlayerToPlayId = DetermineFirstPlayer(players); 
-    }
-    public class Game
-    {
-        public Guid PlayerToPlayId { get; private set; } 
-        public List<Player> Players { get; private set; }
 
-        public Game(List<Player> Players, ITileBag TileBag, ITileFactory tileFactory)
+        TileFactory.FillDisplays();
+
+        TileFactory.TableCenter.AddStartingTile();
+
+        foreach (var player in Players)
         {
-            Players = Players;
-
-            PlayerToPlayId = Players.OrderByDescending(p => p.LastVisitToPortugal).First().Id;
+            player.HasStartingTile = false;
         }
+
+        PlayerToPlayId = DetermineFirstPlayer(players);
     }
 
     private readonly Random _random = new Random();
@@ -78,8 +76,23 @@ internal class Game : IGame
             throw new ArgumentException("There must be at least one player to start a game.", nameof(players));
         }
 
-        int firstPlayerIndex = _random.Next(players.Length);
+        var playerA = players[0];
+        var playerB = players[1];
 
-        return players[firstPlayerIndex].Id;
+        // Als één speler nooit in Portugal is geweest, mag de ander beginnen
+        if (playerA.LastVisitToPortugal == null && playerB.LastVisitToPortugal != null)
+            return playerB.Id;
+
+        if (playerB.LastVisitToPortugal == null && playerA.LastVisitToPortugal != null)
+            return playerA.Id;
+
+        // Als beiden null zijn, dan kiest speler A
+        if (playerA.LastVisitToPortugal == null && playerB.LastVisitToPortugal == null)
+            return playerA.Id;
+
+        // De speler met de meest recente datum (last visited) mag beginnen
+        return playerA.LastVisitToPortugal > playerB.LastVisitToPortugal
+            ? playerA.Id
+            : playerB.Id;
     }
 }
