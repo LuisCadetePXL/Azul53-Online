@@ -146,9 +146,8 @@ namespace Azul.Core.Tests
             {
                 takenTiles.Add(tileType);
             }
-            _tileFactoryMock
-    .Setup(tf => tf.TakeTiles(It.IsAny<Guid>(), It.IsAny<TileType>()))
-    .Returns(takenTiles);
+            _tileFactoryMock.Setup(tf => tf.TakeTiles(displayId, tileType)).Returns(takenTiles);
+
 
 
             PlayerMockBuilder playerToPlayMockBuilder = GetPlayerToPlayMockBuilder();
