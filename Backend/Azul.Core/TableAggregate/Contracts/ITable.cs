@@ -52,4 +52,5 @@ public interface ITable
     /// <param name="gamePlayStrategy">Strategy that should be used by the AI players to determine their next move</param>
     /// <remarks>This is an EXTRA. Not needed to implement the minimal requirements.</remarks>
     void FillWithArtificialPlayers(IGamePlayStrategy gamePlayStrategy);
+    void Join(IPlayer player);
 }

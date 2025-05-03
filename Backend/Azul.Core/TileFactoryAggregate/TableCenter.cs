@@ -4,7 +4,6 @@ namespace Azul.Core.TileFactoryAggregate;
 
 internal class TableCenter : ITableCenter
 {
-
     private readonly List<TileType> _tiles = new List<TileType>();
 
     public Guid Id { get; } = Guid.NewGuid();
@@ -12,7 +11,6 @@ internal class TableCenter : ITableCenter
     public IReadOnlyList<TileType> Tiles => _tiles.AsReadOnly();
 
     public bool IsEmpty => !_tiles.Any();
-
 
     public void AddStartingTile()
     {
@@ -27,7 +25,6 @@ internal class TableCenter : ITableCenter
     public IReadOnlyList<TileType> TakeTiles(TileType tileType)
     {
         List<TileType> takenTiles = new List<TileType>();
-
 
         List<TileType> tilesOfType = _tiles.Where(tile => tile == tileType).ToList();
         takenTiles.AddRange(tilesOfType);

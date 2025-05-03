@@ -4,13 +4,11 @@ namespace Azul.Core.TileFactoryAggregate;
 
 internal class TileFactory : ITileFactory
 {
-
     private readonly int _numberOfDisplays;
     private readonly ITileBag _bag;
     private readonly List<IFactoryDisplay> _displays;
     private readonly ITableCenter _tableCenter;
     private readonly List<TileType> _usedTiles;
-
 
     internal TileFactory(int numberOfDisplays, ITileBag bag)
     {
@@ -23,13 +21,12 @@ internal class TileFactory : ITileFactory
         for (int i = 0; i < numberOfDisplays; i++)
         {
             _displays.Add(new FactoryDisplay(_tableCenter));
-
-        } 
+        }
     }
 
     public ITileBag Bag => _bag;
 
-    public IReadOnlyList<IFactoryDisplay> Displays => _displays.AsReadOnly();   
+    public IReadOnlyList<IFactoryDisplay> Displays => _displays.AsReadOnly();
 
     public ITableCenter TableCenter => _tableCenter;
 
@@ -69,7 +66,7 @@ internal class TileFactory : ITileFactory
         {
             if (!display.Tiles.Contains(tileType))
             {
-                throw new InvalidOperationException($"Tile does not exist on display.");
+                throw new InvalidOperationException("Tile does not exist on display.");
             }
             return display.TakeTiles(tileType);
         }
@@ -78,11 +75,11 @@ internal class TileFactory : ITileFactory
         {
             if (!_tableCenter.Tiles.Contains(tileType))
             {
-                throw new InvalidOperationException($"Tile does not exist in the table center.");
+                throw new InvalidOperationException("Tile does not exist in the table center.");
             }
             return _tableCenter.TakeTiles(tileType);
         }
 
-        throw new InvalidOperationException($"Display does not exist.");
+        throw new InvalidOperationException("Display does not exist.");
     }
 }
