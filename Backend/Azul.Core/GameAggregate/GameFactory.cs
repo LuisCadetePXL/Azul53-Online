@@ -11,16 +11,24 @@ internal class GameFactory : IGameFactory
 {
     public IGame CreateNewForTable(ITable table)
     {
-        IPlayer[] playerList =  new IPlayer[table.SeatedPlayers.Count];
+        IPlayer[] playerList = new IPlayer[table.SeatedPlayers.Count];
         for (int i = 0; i < table.SeatedPlayers.Count; i++)
         {
             playerList[i] = table.SeatedPlayers[i];
         }
 
         ITileBag tileBag = new TileBag();
-        ITileFactory tileFactory = new TileFactory(5, tileBag);
+        // Vul de TileBag met 20 tegels van elk type
+        foreach (TileType tileType in Enum.GetValues(typeof(TileType)).Cast<TileType>().Where(t => t != TileType.StartingTile))
+        {
+            tileBag.AddTiles(20, tileType);
+        }
 
-       IGame game = new Game(Guid.NewGuid(),tileFactory,playerList);
+        // Creëer de TileFactory met het aantal displays uit de tafel preferences
+        ITileFactory tileFactory = new TileFactory(table.Preferences.NumberOfFactoryDisplays, tileBag);
+
+        IGame game = new Game(Guid.NewGuid(), tileFactory, playerList);
+
 
         return game;
     }
