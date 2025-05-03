@@ -43,18 +43,21 @@ internal class TileFactory : ITileFactory
     {
         foreach (IFactoryDisplay display in _displays)
         {
-            if (_bag.TryTakeTiles(4, out IReadOnlyList<TileType> takenTiles))
+            if (!_bag.TryTakeTiles(4, out IReadOnlyList<TileType> takenTiles) || takenTiles.Count < 4)
+            {
+                if (_usedTiles.Count>0)
+                {
+                    _bag.AddTiles(_usedTiles);
+                    _usedTiles.Clear();
+
+                    _bag.TryTakeTiles(4 - takenTiles.Count, out var additionalTiles);
+                    takenTiles = takenTiles.Concat(additionalTiles).ToList();
+                }
+            }
+
+            if (takenTiles.Count > 0)
             {
                 display.AddTiles(takenTiles);
-            }
-            else if (_usedTiles.Any())
-            {
-                _bag.AddTiles(_usedTiles);
-                _usedTiles.Clear();
-                if (_bag.TryTakeTiles(4 - display.Tiles.Count, out IReadOnlyList<TileType> remainingTiles))
-                {
-                    display.AddTiles(remainingTiles);
-                }
             }
         }
     }
