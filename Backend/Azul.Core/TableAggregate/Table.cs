@@ -48,7 +48,7 @@ internal class Table : ITable
 
         if (!HasAvailableSeat)
         {
-            throw new InvalidOperationException("No available seats at the table.");
+            throw new InvalidOperationException("The table is full.");
         }
 
         if (_seatedPlayers.Any(p => p.Id == user.Id))
@@ -56,30 +56,9 @@ internal class Table : ITable
             throw new InvalidOperationException("User is already seated at the table.");
         }
 
-        // Maak een IPlayer (bijv. HumanPlayer) van de User
-        IPlayer player = new HumanPlayer(user.Id, user.UserName, user.LastVisitToPortugal);
-
-        _seatedPlayers.Add(player);
-    }
-
-    public void Join(IPlayer player)
-    {
-        if (player == null)
-        {
-            throw new ArgumentNullException(nameof(player));
-        }
-
-        if (!HasAvailableSeat)
-        {
-            throw new InvalidOperationException("No available seats at the table.");
-        }
-
-        if (_seatedPlayers.Any(p => p.Id == player.Id))
-        {
-            throw new InvalidOperationException("Player is already seated at the table.");
-        }
-
-        _seatedPlayers.Add(player);
+       IPlayer player = new HumanPlayer(user.Id, user.UserName, user.LastVisitToPortugal);
+       _seatedPlayers.Add(player);
+ 
     }
 
 

@@ -24,6 +24,7 @@ internal abstract class PlayerBase : IPlayer
         HasStartingTile = false;
         TilesToPlace = new List<TileType>();
         IBoard board = (IBoard)new Board();
+        Board = board;
     }
 
 }
