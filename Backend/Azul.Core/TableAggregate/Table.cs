@@ -56,9 +56,11 @@ internal class Table : ITable
             throw new InvalidOperationException("User is already seated at the table.");
         }
 
-        IPlayer player = new HumanPlayer(user.Id, user.UserName, user.LastVisitToPortugal);
-        _seatedPlayers.Add(player);
+       IPlayer player = new HumanPlayer(user.Id, user.UserName, user.LastVisitToPortugal);
+       _seatedPlayers.Add(player);
+ 
     }
+
 
     public void Leave(Guid userId)
     {
