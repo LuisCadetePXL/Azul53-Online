@@ -18,6 +18,22 @@ body {
     text-align: center;
 }
 
+#leave {
+    background-color: #ff0000;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    float: right;
+}
+
+#leave:hover {
+    background-color: #7f0202;
+    transform: scale(1.05);
+}
+
 /* Centraal gebied: borden + score-zijbalk */
 .board-area {
     flex: 1;
@@ -128,3 +144,19 @@ body {
 .score-title-img {
     width: 100px;
 }
+
+.circle-container {
+    display: grid;
+    grid-template-columns: repeat(2, auto); /* 2 kolommen */
+    gap: 15px;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.circle {
+    width: 60px;
+    height: 60px;
+    background-color: black;
+    border-radius: 50%;
+}
+
