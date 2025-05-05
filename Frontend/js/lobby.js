@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (text) {
                     const tableData = JSON.parse(text);
                     displayTable(tableData);
+                    sessionStorage.setItem('tableId', tableData.id);
                 } else {
                     console.error('Lege response ontvangen.');
                 }
