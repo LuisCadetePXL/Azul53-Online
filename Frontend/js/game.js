@@ -114,10 +114,11 @@ function renderBoardsAndFactory(gameData, viewerId) {
 function renderScores(players) {
     const scorePanel = document.getElementById('scorePanel');
     scorePanel.innerHTML = '';
-    players.forEach(p => {
-        const el = document.createElement('div');
-        el.textContent = `${p.name}: ${p.score}`;
-        scorePanel.appendChild(el);
+
+    players.forEach(player => {
+        const playerScore = document.createElement('div');
+        playerScore.textContent = `${player.name}: ${player.score ?? 0}`;
+        scorePanel.appendChild(playerScore);
     });
 }
 
