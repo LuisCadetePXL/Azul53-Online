@@ -4,24 +4,39 @@ namespace Azul.Core.TileFactoryAggregate;
 
 internal class TableCenter : ITableCenter
 {
-    public Guid Id => throw new NotImplementedException();
+    private readonly List<TileType> _tiles = new List<TileType>();
 
-    public IReadOnlyList<TileType> Tiles => throw new NotImplementedException();
+    public Guid Id { get; } = Guid.NewGuid();
 
-    public bool IsEmpty => throw new NotImplementedException();
+    public IReadOnlyList<TileType> Tiles => _tiles.AsReadOnly();
+
+    public bool IsEmpty => !_tiles.Any();
 
     public void AddStartingTile()
     {
-        throw new NotImplementedException();
+        _tiles.Add(TileType.StartingTile);
     }
 
     public void AddTiles(IReadOnlyList<TileType> tilesToAdd)
     {
-        throw new NotImplementedException();
+        _tiles.AddRange(tilesToAdd);
     }
 
     public IReadOnlyList<TileType> TakeTiles(TileType tileType)
     {
-        throw new NotImplementedException();
+        List<TileType> takenTiles = new List<TileType>();
+
+        List<TileType> tilesOfType = _tiles.Where(tile => tile == tileType).ToList();
+        takenTiles.AddRange(tilesOfType);
+
+        _tiles.RemoveAll(tile => tile == tileType);
+
+        if (_tiles.Contains(TileType.StartingTile) && !takenTiles.Contains(TileType.StartingTile))
+        {
+            takenTiles.Add(TileType.StartingTile);
+            _tiles.Remove(TileType.StartingTile);
+        }
+
+        return takenTiles.AsReadOnly();
     }
 }

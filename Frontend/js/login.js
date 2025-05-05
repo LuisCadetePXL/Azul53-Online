@@ -67,6 +67,7 @@ function loginUser(email, password) {
         })
         .then((data) => {
             sessionStorage.setItem("token", data.token);
+            sessionStorage.setItem("username", data.user.userName);
             window.location.href = "lobby.html";
         })
         .catch(error => {

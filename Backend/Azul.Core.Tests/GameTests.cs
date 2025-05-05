@@ -148,6 +148,8 @@ namespace Azul.Core.Tests
             }
             _tileFactoryMock.Setup(tf => tf.TakeTiles(displayId, tileType)).Returns(takenTiles);
 
+
+
             PlayerMockBuilder playerToPlayMockBuilder = GetPlayerToPlayMockBuilder();
             IPlayer playerToPlay = playerToPlayMockBuilder.Object;
             List<TileType> tilesToPlace = GetTilesToPlaceOfPlayer(playerToPlay.Id);
