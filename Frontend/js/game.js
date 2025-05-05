@@ -16,137 +16,108 @@
 
         const gameData = await fetchGameData(gameId, token);
 
-        // Zoek viewerId op basis van naam
-        const selfPlayer = gameData.players.find(player => player.name === username);
+        const selfPlayer = gameData.players.find(p => p.name === username);
         const viewerId = selfPlayer?.id;
 
-        renderBoards(gameData, viewerId);
-        renderFactory(gameData.tileFactory, gameData.players.length);
+        renderBoardsAndFactory(gameData, viewerId);
         renderScores(gameData.players);
 
-        // Naam van de speler zelf
         if (selfPlayer) {
             document.getElementById('playerName').textContent = `Speler: ${selfPlayer.name}`;
-        } else {
-            document.getElementById('playerName').textContent = `Speler: Onbekend`;
-            console.warn("Eigen speler niet gevonden in gameData.players");
         }
 
-        // Speler die aan de beurt is
-        const activePlayer = gameData.players.find(player => player.id === gameData.playerToPlayId);
+        const activePlayer = gameData.players.find(p => p.id === gameData.playerToPlayId);
         document.getElementById('activePlayer').textContent = `Aan de beurt: ${activePlayer?.name || 'Onbekend'}`;
-    } catch (error) {
-        console.error('Fout tijdens initialisatie game:', error);
+    } catch (err) {
+        console.error('Fout tijdens initialisatie game:', err);
     }
 
-    const leaveButton = document.querySelector('#leave');
-    if (leaveButton) {
-        leaveButton.addEventListener('click', () => leaveTable(token, tableId));
-    }
+    document.getElementById('leave').addEventListener('click', () => leaveTable(token, tableId));
 });
 
 async function fetchTableData(tableId, token) {
-    const response = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
-        method: 'GET',
+    const res = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
-    if (!response.ok) throw new Error('Fout bij ophalen tableData');
-    return await response.json();
+    if (!res.ok) throw new Error("Fout bij ophalen tableData");
+    return await res.json();
 }
 
 async function fetchGameData(gameId, token) {
-    const response = await fetch(`https://localhost:5051/api/Games/${gameId}`, {
-        method: 'GET',
+    const res = await fetch(`https://localhost:5051/api/Games/${gameId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
-    if (!response.ok) throw new Error('Fout bij ophalen gameData');
-
-    const gameData = await response.json();
-    console.log("Volledige gameData:", gameData);
-    return gameData;
+    if (!res.ok) throw new Error("Fout bij ophalen gameData");
+    return await res.json();
 }
 
-function renderBoards(gameData, viewerId) {
-    const boardsContainer = document.getElementById('boardsContainer');
-    boardsContainer.innerHTML = '';
+function renderBoardsAndFactory(gameData, viewerId) {
+    const container = document.getElementById('boardsContainer');
+    container.innerHTML = '';
 
-    const { players, playerToPlayId, roundNumber } = gameData;
+    const spots = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const sortedPlayers = [...gameData.players].sort((a, b) => a.id === viewerId ? -1 : 0);
 
-    // Zet eigen speler eerst
-    const sortedPlayers = [...players].sort((a, b) => {
-        if (a.id === viewerId) return -1;
-        if (b.id === viewerId) return 1;
-        return 0;
-    });
-
-    sortedPlayers.forEach(player => {
+    sortedPlayers.forEach((player, index) => {
         const board = document.createElement('div');
-        board.classList.add('board');
-
-        // Markeer het bord van de speler die aan de beurt is
-        if (player.id === playerToPlayId) {
+        board.className = `board ${spots[index]}`;
+        if (player.id === gameData.playerToPlayId) {
             board.classList.add('current-player');
         }
 
-        board.setAttribute('data-player-id', player.id);
-
         board.innerHTML = `
-            <div class="pattern-wall">
-                <div class="pattern-row"><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+            <div class="board-top">
+                <div class="pattern-wall">
+                    <div class="pattern-row"><div class="tile"></div></div>
+                    <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
+                    <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+                    <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+                    <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+                </div>
+                <div class="arrows">
+                    <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
+                </div>
+                <div class="wall-grid">
+                    ${'<div class="tile"></div>'.repeat(25)}
+                </div>
             </div>
-
-            <div class="arrows">
-                <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
+            <div class="floor-line-container">
+                <div class="floor-line-numbers">
+                    <span>-1</span><span>-1</span><span>-2</span><span>-2</span><span>-2</span><span>-3</span><span>-3</span>
+                </div>
+                <div class="floor-line-tiles">
+                    ${'<div class="penalty-tile"></div>'.repeat(7)}
+                </div>
             </div>
-
-            <div class="wall-grid">
-                ${'<div class="tile"></div>'.repeat(25)}
-            </div>
-
-            <div class="floor-line">
-                <div class="penalty">-1</div><div class="penalty">-1</div><div class="penalty">-2</div>
-                <div class="penalty">-2</div><div class="penalty">-2</div><div class="penalty">-3</div><div class="penalty">-3</div>
-            </div>
-
             <div class="player-name">${player.name}</div>
         `;
-
-        boardsContainer.appendChild(board);
+        container.appendChild(board);
     });
 
-    // Ronde onderaan weergeven
-    const roundInfo = document.getElementById('roundInfo');
-    if (roundInfo) {
-        roundInfo.textContent = `Ronde ${roundNumber}`;
-    }
-}
-
-function renderFactory(tileFactory, playerCount) {
-    const factoryContainer = document.getElementById('factoryContainer');
-    factoryContainer.innerHTML = '';
-
-    const expectedFactories = { 2: 5, 3: 7, 4: 9 }[playerCount] || 0;
-
-    tileFactory.displays.slice(0, expectedFactories).forEach(disc => {
-        const discElement = document.createElement('div');
-        discElement.classList.add('circle');
-        discElement.textContent = disc.tiles.join(', ');
-        factoryContainer.appendChild(discElement);
+    const center = document.createElement('div');
+    center.className = 'circle-container';
+    const factories = gameData.tileFactory.displays;
+    const playerCount = gameData.players.length;
+    const expected = { 2: 5, 3: 7, 4: 9 }[playerCount] || factories.length;
+    factories.slice(0, expected).forEach(disc => {
+        const el = document.createElement('div');
+        el.className = 'circle';
+        el.textContent = disc.tiles.join(', ');
+        center.appendChild(el);
     });
+    container.appendChild(center);
+
+    const round = document.getElementById('roundInfo');
+    round.textContent = `Ronde ${gameData.roundNumber}`;
 }
 
 function renderScores(players) {
     const scorePanel = document.getElementById('scorePanel');
     scorePanel.innerHTML = '';
-
-    players.forEach(player => {
-        const playerScore = document.createElement('div');
-        playerScore.textContent = `${player.name}: ${player.score}`;
-        scorePanel.appendChild(playerScore);
+    players.forEach(p => {
+        const el = document.createElement('div');
+        el.textContent = `${p.name}: ${p.score}`;
+        scorePanel.appendChild(el);
     });
 }
 

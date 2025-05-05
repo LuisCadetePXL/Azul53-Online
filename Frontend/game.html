@@ -3,40 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bordlayout</title>
+    <title>Azul Game</title>
     <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
-    <div class="title-bar">
-        Game In Progress
-        <button id="leave">Leave</button>
+<div class="title-bar">
+    Game In Progress
+    <button id="leave">Leave</button>
+</div>
+
+<div class="game-info">
+    <div id="gameIdDisplay">Game ID: <span id="gameIdValue">N/A</span></div>
+    <div id="playerName" class="player-name">Speler: N/A</div>
+</div>
+
+<main>
+    <div class="board-area-grid" id="boardsContainer">
+        <!-- Dynamisch ingevuld via JavaScript -->
     </div>
 
-    <div id="gameInfo" class="game-info">
-        <div id="gameIdDisplay">
-            Game ID: <span id="gameIdValue">N/A</span>
-        </div>
-        <div id="playerName" class="player-name">Speler: N/A</div>
+    <div class="score-panel">
+        <img src="images/azul_titel.png" class="score-title-img" alt="Azul Titel">
+        <div class="score-title">Scores</div>
+        <div id="activePlayer" class="active-player">Aan de beurt: N/A</div>
+        <div id="scorePanel"></div>
+        <div id="roundInfo" class="round-number"></div>
     </div>
+</main>
 
-    <div class="board-area">
-        <div class="boards-container" id="boardsContainer">
-            <!-- Dynamisch borden hier -->
-        </div>
-
-        <div class="circle-container" id="factoryContainer">
-            <!-- Dynamisch fabrieksschijven hier -->
-        </div>
-
-        <div class="score-panel">
-            <img src="images/azul_titel.png" class="score-title-img" alt="Azul Titel">
-            <div class="score-title">Scores</div>
-            <div id="activePlayer" class="active-player">Aan de beurt: N/A</div>
-            <div id="scorePanel"></div>
-            <div id="roundInfo" class="round-number"></div>
-        </div>
-    </div>
-
-    <script src="js/game.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>
