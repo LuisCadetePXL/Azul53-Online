@@ -77,7 +77,6 @@ main {
     overflow: hidden;
     position: relative;
     margin-top: 30px;
-
 }
 
 .board.top-left    { grid-area: top-left; }
@@ -240,6 +239,15 @@ main {
     margin: 2px;
     border-radius: 4px;
     box-shadow: 0 0 2px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.tile-image:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.7);
+    z-index: 10;
 }
 
 .tile-grid {
@@ -253,4 +261,9 @@ main {
 .tile-image.board-tile {
     opacity: 0.9;
     filter: brightness(0.8);
+}
+
+.tile-image.board-tile:hover {
+    opacity: 1;
+    filter: brightness(1);
 }
