@@ -1,4 +1,3 @@
-/* Algemene layout */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -8,7 +7,6 @@ body {
     height: 100vh;
 }
 
-/* Navigatiebalk bovenaan */
 .title-bar {
     background-color: #444;
     color: white;
@@ -16,6 +14,7 @@ body {
     font-size: 1.5em;
     font-weight: bold;
     text-align: center;
+    position: relative;
 }
 
 #leave {
@@ -26,15 +25,35 @@ body {
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
-    float: right;
+    position: absolute;
+    right: 20px;
+    top: 10px;
 }
 
-#leave:hover {
-    background-color: #7f0202;
-    transform: scale(1.05);
+    #leave:hover {
+        background-color: #7f0202;
+        transform: scale(1.05);
+    }
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 16px;
+    color: white;
 }
 
-/* Centraal gebied: borden + score-zijbalk */
+#gameIdDisplay {
+    font-size: 16px;
+}
+
+.player-name {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
 .board-area {
     flex: 1;
     display: flex;
@@ -44,16 +63,13 @@ body {
     overflow: auto;
 }
 
-/* 2x2 grid met de 4 borden */
 .boards-container {
     display: grid;
-    grid-template-columns: repeat(2, auto);
-    grid-template-rows: repeat(2, auto);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
     flex-grow: 1;
 }
 
-/* Eén individueel bord */
 .board {
     background-color: #ccc;
     padding: 15px;
@@ -64,7 +80,11 @@ body {
     width: fit-content;
 }
 
-/* Trapvormige patroonrijen */
+    .board.current-player {
+        border: 4px solid #00aaff;
+        background-color: #eef;
+    }
+
 .pattern-wall {
     display: flex;
     flex-direction: column;
@@ -78,7 +98,6 @@ body {
     gap: 5px;
 }
 
-/* Tegels */
 .tile {
     width: 30px;
     height: 30px;
@@ -87,7 +106,6 @@ body {
     box-sizing: border-box;
 }
 
-/* Pijltjes tussen patroon en muur */
 .arrows {
     display: flex;
     flex-direction: column;
@@ -96,14 +114,12 @@ body {
     font-size: 20px;
 }
 
-/* 5x5 muur */
 .wall-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 5px;
 }
 
-/* Straflijn onderaan bord */
 .floor-line {
     grid-column: 1 / span 3;
     margin-top: 15px;
@@ -123,7 +139,6 @@ body {
     font-weight: bold;
 }
 
-/* Score zijbalk */
 .score-panel {
     width: 220px;
     background-color: #eee;
@@ -147,7 +162,7 @@ body {
 
 .circle-container {
     display: grid;
-    grid-template-columns: repeat(2, auto); /* 2 kolommen */
+    grid-template-columns: repeat(3, auto);
     gap: 15px;
     justify-content: center;
     margin: 20px auto;
@@ -158,5 +173,11 @@ body {
     height: 60px;
     background-color: black;
     border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    text-align: center;
 }
-

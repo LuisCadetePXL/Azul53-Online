@@ -1,57 +1,132 @@
-document.addEventListener("DOMContentLoaded", function () {
-    // Verkrijg het aantal spelers uit localStorage of gebruik de standaard waarde
-    let playerCount = parseInt(localStorage.getItem('playerCount')) || 0;
-    const requiredPlayers = parseInt(localStorage.getItem('requiredPlayers')) || 4; // Aantal spelers dat nodig is om het spel te starten
+﻿document.addEventListener('DOMContentLoaded', async () => {
+    const token = sessionStorage.getItem('token');
+    const tableId = sessionStorage.getItem('tableId');
 
-    // Verkrijg de "Leave" knop
-    const leaveButton = document.querySelector('#leave');
-
-    // Controleer of de knop bestaat en voeg een event listener toe
-    if (leaveButton) {
-        leaveButton.addEventListener('click', function () {
-            // Verminder het aantal spelers in de localStorage wanneer iemand het spel verlaat
-            playerCount--;
-
-            // Update het aantal spelers in localStorage
-            localStorage.setItem('playerCount', playerCount);
-
-            // Redirect naar de lobby pagina
-            window.location.href = "lobby.html";
-        });
-    } else {
-        console.error("De 'Leave' knop is niet gevonden.");
+    if (!token || !tableId) {
+        console.error('Token of tableId ontbreekt. Terug naar lobby.');
+        window.location.href = "lobby.html";
+        return;
     }
 
-    // Functie om te controleren of het spel kan beginnen
-    const checkStartCondition = () => {
-        const boards = document.querySelectorAll('.board');
+    try {
+        const tableData = await fetchTableData(tableId, token);
+        const gameId = tableData.gameId;
+        document.getElementById('gameIdValue').textContent = gameId;
 
-        // Check of het aantal spelers gelijk is aan het vereiste aantal om te starten
-        if (boards.length === requiredPlayers) {
-            startGame();
-        } else {
-            console.log(`Wachten op meer spelers... Heden aantal spelers: ${boards.length}`);
-        }
-    };
+        const gameData = await fetchGameData(gameId, token);
 
-    // Start het spel
-    const startGame = () => {
-        console.log("Het spel begint!");
+        renderBoards(gameData.players, gameData.playerToPlayId);
+        renderFactory(gameData.tileFactory, gameData.players.length);
+        renderScores(gameData.players);
+        const currentPlayer = gameData.players.find(player => player.id === gameData.playerToPlayId);
+        document.getElementById('playerName').textContent = `Speler: ${currentPlayer.name}`;
+    } catch (error) {
+        console.error('Fout tijdens initialisatie game:', error);
+    }
 
-        // Verander de titelbalk om aan te geven dat het spel is gestart
-        const titleBar = document.querySelector('.title-bar');
-        if (titleBar) {
-            titleBar.textContent = "Spel gestart!";
-        }
-
-        // Hier kun je andere logica toevoegen voor het starten van het spel (zoals het weergeven van stenen, scores, enz.)
-    };
-
-    // Simuleer een korte vertraging om te testen (in een echte situatie zou dit gebeuren wanneer spelers worden toegevoegd)
-    setTimeout(checkStartCondition, 3000); // Wacht 3 seconden voor test
-
-    // Simuleer het toevoegen van spelers
-    // Wanneer een speler wordt toegevoegd, wordt het aantal opgeslagen in localStorage
-    // Voorbeeld: Voeg spelers toe door dit handmatig aan te roepen
-    // localStorage.setItem('playerCount', playerCount + 1); // Wanneer een speler zich aanmeldt
+    const leaveButton = document.querySelector('#leave');
+    if (leaveButton) {
+        leaveButton.addEventListener('click', () => leaveTable(token, tableId));
+    }
 });
+
+
+async function fetchTableData(tableId, token) {
+    const response = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Fout bij ophalen tableData');
+    return await response.json();
+}
+
+async function fetchGameData(gameId, token) {
+    const response = await fetch(`https://localhost:5051/api/Games/${gameId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Fout bij ophalen gameData');
+
+    const gameData = await response.json();
+    console.log("Volledige gameData:", gameData);
+    return gameData;
+}
+
+function renderBoards(players, currentPlayerId) {
+    const boardsContainer = document.getElementById('boardsContainer');
+    boardsContainer.innerHTML = '';
+
+    players.forEach(player => {
+        const board = document.createElement('div');
+        board.classList.add('board');
+        if (player.id === currentPlayerId) {
+            board.classList.add('current-player');
+        }
+
+        board.setAttribute('data-player-id', player.id);
+
+        board.innerHTML = `
+            <div class="pattern-wall">
+                <div class="pattern-row"><div class="tile"></div></div>
+                <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
+                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+            </div>
+
+            <div class="arrows">
+                <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
+            </div>
+
+            <div class="wall-grid">
+                ${'<div class="tile"></div>'.repeat(25)}
+            </div>
+
+            <div class="floor-line">
+                <div class="penalty">-1</div><div class="penalty">-1</div><div class="penalty">-2</div>
+                <div class="penalty">-2</div><div class="penalty">-2</div><div class="penalty">-3</div><div class="penalty">-3</div>
+            </div>
+        `;
+
+        boardsContainer.appendChild(board);
+    });
+}
+
+function renderFactory(tileFactory, playerCount) {
+    const factoryContainer = document.getElementById('factoryContainer');
+    factoryContainer.innerHTML = '';
+
+    const expectedFactories = { 2: 5, 3: 7, 4: 9 }[playerCount] || 0;
+
+
+    tileFactory.displays.slice(0, expectedFactories).forEach(disc => {
+        const discElement = document.createElement('div');
+        discElement.classList.add('circle');
+        discElement.textContent = disc.tiles.join(', ');
+        factoryContainer.appendChild(discElement);
+    });
+}
+
+function renderScores(players) {
+    const scorePanel = document.getElementById('scorePanel');
+    scorePanel.innerHTML = '';
+
+    players.forEach(player => {
+        const playerScore = document.createElement('div');
+        playerScore.textContent = `${player.name}: ${player.score}`;
+        scorePanel.appendChild(playerScore);
+    });
+}
+
+async function leaveTable(token, tableId) {
+    try {
+        await fetch(`https://localhost:5051/api/Tables/${tableId}/leave`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+    } catch (err) {
+        console.error('Fout bij verlaten tafel:', err);
+    } finally {
+        window.location.href = "lobby.html";
+    }
+}

@@ -7,163 +7,34 @@
     <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
-<div class="title-bar">
-    Game In Progress
-    <button id="leave">Leave</button>
-</div>
+    <div class="title-bar">
+        Game In Progress
+        <button id="leave">Leave</button>
+    </div>
 
-<div class="board-area">
-    <div class="boards-container">
-        <!-- Herhaal dit blok 4x voor 4 spelers -->
-        <div class="board">
-            <div class="pattern-wall">
-                <div class="pattern-row"><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-            </div>
+    <div id="gameInfo" class="game-info">
+        <div id="gameIdDisplay">
+            Game ID: <span id="gameIdValue">N/A</span>
+        </div>
+        <div id="playerName" class="player-name">Speler: N/A</div>
+    </div>
 
-            <div class="arrows">
-                <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
-            </div>
-
-            <div class="wall-grid">
-                <!-- 5x5 muur -->
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-            </div>
-
-            <div class="floor-line">
-                <div class="penalty">-1</div>
-                <div class="penalty">-1</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-3</div>
-                <div class="penalty">-3</div>
-            </div>
+    <div class="board-area">
+        <div class="boards-container" id="boardsContainer">
+            <!-- Dynamisch borden hier -->
         </div>
 
-        <div class="board">
-            <div class="pattern-wall">
-                <div class="pattern-row"><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-            </div>
-
-            <div class="arrows">
-                <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
-            </div>
-
-            <div class="wall-grid">
-                <!-- 5x5 muur -->
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-            </div>
-
-            <div class="floor-line">
-                <div class="penalty">-1</div>
-                <div class="penalty">-1</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-3</div>
-                <div class="penalty">-3</div>
-            </div>
+        <div class="circle-container" id="factoryContainer">
+            <!-- Dynamisch fabrieksschijven hier -->
         </div>
-        <div class="board">
-            <div class="pattern-wall">
-                <div class="pattern-row"><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-            </div>
 
-            <div class="arrows">
-                <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
-            </div>
-
-            <div class="wall-grid">
-                <!-- 5x5 muur -->
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-            </div>
-
-            <div class="floor-line">
-                <div class="penalty">-1</div>
-                <div class="penalty">-1</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-3</div>
-                <div class="penalty">-3</div>
-            </div>
-        </div>
-        <div class="board">
-            <div class="pattern-wall">
-                <div class="pattern-row"><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-                <div class="pattern-row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
-            </div>
-
-            <div class="arrows">
-                <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
-            </div>
-
-            <div class="wall-grid">
-                <!-- 5x5 muur -->
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-                <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
-            </div>
-
-            <div class="floor-line">
-                <div class="penalty">-1</div>
-                <div class="penalty">-1</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-2</div>
-                <div class="penalty">-3</div>
-                <div class="penalty">-3</div>
-            </div>
+        <div class="score-panel">
+            <img src="images/azul_titel.png" class="score-title-img" alt="Azul Titel">
+            <div class="score-title">Scores</div>
+            <div id="scorePanel"></div>
         </div>
     </div>
 
-    <div class="circle-container">
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-        <div class="circle"></div>
-    </div>
-
-    <div class="score-panel">
-        <img src="images/azul_titel.png" class="score-title-img" alt="Azul Titel">
-        <div class="score-title">Scores</div>
-    </div>
-</div>
-<script src="js/game.js"></script>
+    <script src="js/game.js"></script>
 </body>
-
 </html>
