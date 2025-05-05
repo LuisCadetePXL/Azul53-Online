@@ -181,3 +181,29 @@ body {
     padding: 4px;
     text-align: center;
 }
+
+.active-player {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+    text-align: center;
+}
+
+.player-label {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+.round-number {
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+
+

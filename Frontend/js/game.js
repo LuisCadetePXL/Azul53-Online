@@ -1,9 +1,10 @@
 ﻿document.addEventListener('DOMContentLoaded', async () => {
     const token = sessionStorage.getItem('token');
     const tableId = sessionStorage.getItem('tableId');
+    const username = sessionStorage.getItem('username');
 
-    if (!token || !tableId) {
-        console.error('Token of tableId ontbreekt. Terug naar lobby.');
+    if (!token || !tableId || !username) {
+        console.error('Token, tableId of username ontbreekt. Terug naar lobby.');
         window.location.href = "lobby.html";
         return;
     }
@@ -15,11 +16,25 @@
 
         const gameData = await fetchGameData(gameId, token);
 
-        renderBoards(gameData.players, gameData.playerToPlayId);
+        // Zoek viewerId op basis van naam
+        const selfPlayer = gameData.players.find(player => player.name === username);
+        const viewerId = selfPlayer?.id;
+
+        renderBoards(gameData, viewerId);
         renderFactory(gameData.tileFactory, gameData.players.length);
         renderScores(gameData.players);
-        const currentPlayer = gameData.players.find(player => player.id === gameData.playerToPlayId);
-        document.getElementById('playerName').textContent = `Speler: ${currentPlayer.name}`;
+
+        // Naam van de speler zelf
+        if (selfPlayer) {
+            document.getElementById('playerName').textContent = `Speler: ${selfPlayer.name}`;
+        } else {
+            document.getElementById('playerName').textContent = `Speler: Onbekend`;
+            console.warn("Eigen speler niet gevonden in gameData.players");
+        }
+
+        // Speler die aan de beurt is
+        const activePlayer = gameData.players.find(player => player.id === gameData.playerToPlayId);
+        document.getElementById('activePlayer').textContent = `Aan de beurt: ${activePlayer?.name || 'Onbekend'}`;
     } catch (error) {
         console.error('Fout tijdens initialisatie game:', error);
     }
@@ -29,7 +44,6 @@
         leaveButton.addEventListener('click', () => leaveTable(token, tableId));
     }
 });
-
 
 async function fetchTableData(tableId, token) {
     const response = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
@@ -52,14 +66,25 @@ async function fetchGameData(gameId, token) {
     return gameData;
 }
 
-function renderBoards(players, currentPlayerId) {
+function renderBoards(gameData, viewerId) {
     const boardsContainer = document.getElementById('boardsContainer');
     boardsContainer.innerHTML = '';
 
-    players.forEach(player => {
+    const { players, playerToPlayId, roundNumber } = gameData;
+
+    // Zet eigen speler eerst
+    const sortedPlayers = [...players].sort((a, b) => {
+        if (a.id === viewerId) return -1;
+        if (b.id === viewerId) return 1;
+        return 0;
+    });
+
+    sortedPlayers.forEach(player => {
         const board = document.createElement('div');
         board.classList.add('board');
-        if (player.id === currentPlayerId) {
+
+        // Markeer het bord van de speler die aan de beurt is
+        if (player.id === playerToPlayId) {
             board.classList.add('current-player');
         }
 
@@ -86,10 +111,18 @@ function renderBoards(players, currentPlayerId) {
                 <div class="penalty">-1</div><div class="penalty">-1</div><div class="penalty">-2</div>
                 <div class="penalty">-2</div><div class="penalty">-2</div><div class="penalty">-3</div><div class="penalty">-3</div>
             </div>
+
+            <div class="player-name">${player.name}</div>
         `;
 
         boardsContainer.appendChild(board);
     });
+
+    // Ronde onderaan weergeven
+    const roundInfo = document.getElementById('roundInfo');
+    if (roundInfo) {
+        roundInfo.textContent = `Ronde ${roundNumber}`;
+    }
 }
 
 function renderFactory(tileFactory, playerCount) {
@@ -97,7 +130,6 @@ function renderFactory(tileFactory, playerCount) {
     factoryContainer.innerHTML = '';
 
     const expectedFactories = { 2: 5, 3: 7, 4: 9 }[playerCount] || 0;
-
 
     tileFactory.displays.slice(0, expectedFactories).forEach(disc => {
         const discElement = document.createElement('div');
