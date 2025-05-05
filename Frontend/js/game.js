@@ -1,35 +1,57 @@
-const leaveButton = document.querySelector('#leave');
+document.addEventListener("DOMContentLoaded", function () {
+    // Verkrijg het aantal spelers uit localStorage of gebruik de standaard waarde
+    let playerCount = parseInt(localStorage.getItem('playerCount')) || 0;
+    const requiredPlayers = parseInt(localStorage.getItem('requiredPlayers')) || 4; // Aantal spelers dat nodig is om het spel te starten
 
-leaveButton.addEventListener('click', function () {
-    window.location.href = "lobby.html"; 
+    // Verkrijg de "Leave" knop
+    const leaveButton = document.querySelector('#leave');
 
-});
+    // Controleer of de knop bestaat en voeg een event listener toe
+    if (leaveButton) {
+        leaveButton.addEventListener('click', function () {
+            // Verminder het aantal spelers in de localStorage wanneer iemand het spel verlaat
+            playerCount--;
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Wacht tot de pagina volledig geladen is
+            // Update het aantal spelers in localStorage
+            localStorage.setItem('playerCount', playerCount);
+
+            // Redirect naar de lobby pagina
+            window.location.href = "lobby.html";
+        });
+    } else {
+        console.error("De 'Leave' knop is niet gevonden.");
+    }
+
+    // Functie om te controleren of het spel kan beginnen
     const checkStartCondition = () => {
         const boards = document.querySelectorAll('.board');
 
-        if (boards.length === 4) {
+        // Check of het aantal spelers gelijk is aan het vereiste aantal om te starten
+        if (boards.length === requiredPlayers) {
             startGame();
         } else {
-            console.log("Wachten op meer spelers...");
+            console.log(`Wachten op meer spelers... Heden aantal spelers: ${boards.length}`);
         }
     };
 
+    // Start het spel
     const startGame = () => {
-        // Hier definieer je wat er moet gebeuren als het spel begint
         console.log("Het spel begint!");
 
-        // Voorbeeld: verander de titelbalk om dit aan te geven
+        // Verander de titelbalk om aan te geven dat het spel is gestart
         const titleBar = document.querySelector('.title-bar');
         if (titleBar) {
             titleBar.textContent = "Spel gestart!";
         }
 
-        // Andere logica zoals het tonen van stenen, initialiseren van scores etc.
+        // Hier kun je andere logica toevoegen voor het starten van het spel (zoals het weergeven van stenen, scores, enz.)
     };
 
-    // Simuleer een korte vertraging om te checken (kan later vervangen worden door echte game lobby logica)
-    setTimeout(checkStartCondition, 3000);
+    // Simuleer een korte vertraging om te testen (in een echte situatie zou dit gebeuren wanneer spelers worden toegevoegd)
+    setTimeout(checkStartCondition, 3000); // Wacht 3 seconden voor test
+
+    // Simuleer het toevoegen van spelers
+    // Wanneer een speler wordt toegevoegd, wordt het aantal opgeslagen in localStorage
+    // Voorbeeld: Voeg spelers toe door dit handmatig aan te roepen
+    // localStorage.setItem('playerCount', playerCount + 1); // Wanneer een speler zich aanmeldt
 });
