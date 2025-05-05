@@ -233,3 +233,24 @@ main {
     font-size: 0.9rem;
     color: #444;
 }
+
+.tile-image {
+    width: 24px;
+    height: 24px;
+    margin: 2px;
+    border-radius: 4px;
+    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+.tile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    justify-items: center;
+    align-items: center;
+}
+
+.tile-image.board-tile {
+    opacity: 0.9;
+    filter: brightness(0.8);
+}

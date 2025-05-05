@@ -1,7 +1,20 @@
-﻿document.addEventListener('DOMContentLoaded', async () => {
+﻿
+const tileTypeToImage = {
+    0: '../images/startingtTile.png',
+    11: '../images/yellowRed.png',
+    12: '../images/plainRed.png',
+    13: '../images/blackBlue.png',
+    14: '../images/whiteTurquoise.png',
+    15: '../images/plainBlue.png'
+};
+document.addEventListener('DOMContentLoaded', async () => {
+
+
     const token = sessionStorage.getItem('token');
     const tableId = sessionStorage.getItem('tableId');
     const username = sessionStorage.getItem('username');
+
+
 
     if (!token || !tableId || !username) {
         console.error('Token, tableId of username ontbreekt. Terug naar lobby.');
@@ -58,7 +71,17 @@ function renderBoardsAndFactory(gameData, viewerId) {
     const spots = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
     const sortedPlayers = [...gameData.players].sort((a, b) => a.id === viewerId ? -1 : 0);
 
+    console.group("🧩 Spelerborden");
+
     sortedPlayers.forEach((player, index) => {
+        console.group(`👤 Speler: ${player.name}`);
+        console.log("📋 Pattern Lines:", player.board.patternLines);
+        console.log("🧱 Wall:", player.board.wall);
+        console.log("🧹 Floor Line:", player.board.floorLine);
+        console.log("⭐ Score:", player.board.score);
+        console.log("🏁 Heeft start-tegel:", player.hasStartingTile);
+        console.log("🎯 Tiles to place:", player.tilesToPlace);
+
         const board = document.createElement('div');
         board.className = `board ${spots[index]}`;
         if (player.id === gameData.playerToPlayId) {
@@ -77,9 +100,24 @@ function renderBoardsAndFactory(gameData, viewerId) {
                 <div class="arrows">
                     <div>▶</div><div>▶</div><div>▶</div><div>▶</div><div>▶</div>
                 </div>
+                
                 <div class="wall-grid">
-                    ${'<div class="tile"></div>'.repeat(25)}
-                </div>
+                    ${ player.board.wall.map(row => 
+                    row.map(cell => {
+                        if (cell.type) {
+                            if (cell.type > 15){
+                                cell.type -= 5;
+                            }
+                            const src = tileTypeToImage[cell.type] || '../images/unknown.png';
+                            return `<img src="${src}" class="tile-image board-tile" alt="Tile ${cell.type}">`;
+                        } else {
+                            return `<div class="tile empty-tile"></div>`;
+                        }
+                    }).join('')
+                ).join('')
+                }
+               </div>
+
             </div>
             <div class="floor-line-container">
                 <div class="floor-line-numbers">
@@ -92,24 +130,51 @@ function renderBoardsAndFactory(gameData, viewerId) {
             <div class="player-name">${player.name}</div>
         `;
         container.appendChild(board);
+
+        console.groupEnd();
     });
+
+    console.groupEnd();
 
     const center = document.createElement('div');
     center.className = 'circle-container';
+
     const factories = gameData.tileFactory.displays;
+    const tableCenter = gameData.tileFactory.tableCenter;
+
+    console.group("🏭 Fabrieken");
+    console.log("🔁 Aantal displays:", factories.length);
+    console.log("🎯 Verwachte fabrieken voor", gameData.players.length, "spelers:", { 2: 5, 3: 7, 4: 9 }[gameData.players.length] || factories.length);
+    console.log("📦 Table Center:", tableCenter);
+
     const playerCount = gameData.players.length;
     const expected = { 2: 5, 3: 7, 4: 9 }[playerCount] || factories.length;
-    factories.slice(0, expected).forEach(disc => {
+    factories.slice(0, expected).forEach((disc, i) => {
+        console.group(`🌀 Fabriek #${i + 1}`);
+        console.log("ID:", disc.id);
+        console.log("Tegels:", disc.tiles);
+        console.groupEnd();
+
         const el = document.createElement('div');
         el.className = 'circle';
-        el.textContent = disc.tiles.join(', ');
+        el.innerHTML = `
+            <div class="tile-grid">
+                ${disc.tiles.map(tile => {
+            const src = tileTypeToImage[tile];
+            return `<img src="${src}" class="tile-image" alt="Tile ${tile}">`;
+        }).join('')}
+            </div>
+        `;
         center.appendChild(el);
     });
+    console.groupEnd();
+
     container.appendChild(center);
 
     const round = document.getElementById('roundInfo');
     round.textContent = `Ronde ${gameData.roundNumber}`;
 }
+
 
 function renderScores(players) {
     const scorePanel = document.getElementById('scorePanel');
