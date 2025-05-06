@@ -6,7 +6,6 @@ namespace Azul.Core.BoardAggregate;
 /// <inheritdoc cref="IPatternLine"/>
 internal class PatternLine : IPatternLine
 {
-
     private readonly int _length;
     private TileType? _tileType;
     private int _numberOfTiles;
@@ -34,12 +33,24 @@ internal class PatternLine : IPatternLine
 
     public void TryAddTiles(TileType type, int numberOfTilesToAdd, out int remainingNumberOfTiles)
     {
-        remainingNumberOfTiles = _length - _numberOfTiles;
-        if (remainingNumberOfTiles > 0)
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("Cannot add tiles to a complete pattern line.");
+        }
+
+        if (_tileType != null && _tileType != type)
+        {
+            throw new InvalidOperationException("Cannot add tiles of a different type to the pattern line.");
+        }
+
+        int availableSpace = _length - _numberOfTiles;
+        int tilesToAdd = Math.Min(numberOfTilesToAdd, availableSpace);
+        remainingNumberOfTiles = numberOfTilesToAdd - tilesToAdd;
+
+        if (tilesToAdd > 0)
         {
             _tileType = type;
-            _numberOfTiles += numberOfTilesToAdd;
-            remainingNumberOfTiles = _length - _numberOfTiles;
+            _numberOfTiles += tilesToAdd;
         }
     }
 }
