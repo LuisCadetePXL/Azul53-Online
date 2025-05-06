@@ -9,7 +9,6 @@
     };
     document.addEventListener('DOMContentLoaded', async () => {
 
-
         const token = sessionStorage.getItem('token');
         const tableId = sessionStorage.getItem('tableId');
         const username = sessionStorage.getItem('username');
@@ -74,13 +73,6 @@
         console.group("🧩 Spelerborden");
 
         sortedPlayers.forEach((player, index) => {
-            console.group(`👤 Speler: ${player.name}`);
-            console.log("📋 Pattern Lines:", player.board.patternLines);
-            console.log("🧱 Wall:", player.board.wall);
-            console.log("🧹 Floor Line:", player.board.floorLine);
-            console.log("⭐ Score:", player.board.score);
-            console.log("🏁 Heeft start-tegel:", player.hasStartingTile);
-            console.log("🎯 Tiles to place:", player.tilesToPlace);
 
             const board = document.createElement('div');
             board.className = `board ${spots[index]}`;
@@ -141,19 +133,9 @@
 
         const factories = gameData.tileFactory.displays;
         const tableCenter = gameData.tileFactory.tableCenter;
-
-        console.group("🏭 Fabrieken");
-        console.log("🔁 Aantal displays:", factories.length);
-        console.log("🎯 Verwachte fabrieken voor", gameData.players.length, "spelers:", { 2: 5, 3: 7, 4: 9 }[gameData.players.length] || factories.length);
-        console.log("📦 Table Center:", tableCenter);
-
         const playerCount = gameData.players.length;
         const expected = { 2: 5, 3: 7, 4: 9 }[playerCount] || factories.length;
         factories.slice(0, expected).forEach((disc, i) => {
-            console.group(`🌀 Fabriek #${i + 1}`);
-            console.log("ID:", disc.id);
-            console.log("Tegels:", disc.tiles);
-            console.groupEnd();
 
             const el = document.createElement('div');
             el.className = 'circle';
