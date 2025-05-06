@@ -39,8 +39,22 @@ internal class Board : IBoard
 
     public void AddTilesToFloorLine(IReadOnlyList<TileType> tilesToAdd, ITileFactory tileFactory)
     {
-        // dummy
+        int i = 0;
+
+        foreach (var tile in tilesToAdd)
+        {
+            if (i < FloorLine.Length)
+            {
+                FloorLine[i] = new TileSpot(tile); 
+                i++;
+            }
+            else
+            {
+                tileFactory.AddToUsedTiles(tile);
+            }
+        }
     }
+
 
     public void DoWallTiling(ITileFactory tileFactory)
     {
