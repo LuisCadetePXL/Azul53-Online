@@ -45,7 +45,7 @@ internal class TileFactory : ITileFactory
         {
             if (!_bag.TryTakeTiles(4, out IReadOnlyList<TileType> takenTiles) || takenTiles.Count < 4)
             {
-                if (_usedTiles.Count>0)
+                if (_usedTiles.Count > 0)
                 {
                     _bag.AddTiles(_usedTiles);
                     _usedTiles.Clear();
