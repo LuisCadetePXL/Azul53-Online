@@ -1,4 +1,5 @@
-﻿using Azul.Core.GameAggregate.Contracts;
+﻿using Azul.Core.BoardAggregate.Contracts;
+using Azul.Core.GameAggregate.Contracts;
 using Azul.Core.PlayerAggregate;
 using Azul.Core.PlayerAggregate.Contracts;
 using Azul.Core.TileFactoryAggregate.Contracts;
@@ -45,7 +46,7 @@ internal class Game : IGame
     {
         EnsurePlayersTurn(playerId);
 
-        var player = GetPlayerById(playerId);
+        IPlayer player = GetPlayerById(playerId);
         if (player.TilesToPlace.Count > 0)
             throw new InvalidOperationException("Player must place previously taken tiles before taking new ones.");
 
@@ -53,13 +54,16 @@ internal class Game : IGame
 
         foreach (var tile in tiles)
         {
-            if (tile == TileType.StartingTile)  // Correcte waarde voor 'StartingTile'
-                player.HasStartingTile = true;
+            if (tile == TileType.StartingTile) { 
+            player.HasStartingTile = true;
+            player.TilesToPlace.Add(tile); 
+            }
             else
+            {
                 player.TilesToPlace.Add(tile);
+            }
         }
 
-        AdvanceTurnIfNeeded();
     }
 
 
@@ -68,11 +72,14 @@ internal class Game : IGame
         EnsurePlayersTurn(playerId);
         EnsurePlayerHasTilesToPlace(playerId);
 
-        var player = GetPlayerById(playerId);
-        var tilesToPlace = player.TilesToPlace.ToList();
-        player.TilesToPlace.Clear();
+        IPlayer player = GetPlayerById(playerId);
+        IBoard board = player.Board;
 
-        player.Board.AddTilesToPatternLine(tilesToPlace, patternLineIndex, TileFactory);
+        List<TileType> tilesToPlace = player.TilesToPlace.ToList();
+
+        board.AddTilesToPatternLine(tilesToPlace, patternLineIndex, TileFactory);
+
+        player.TilesToPlace.Clear();
 
         AdvanceTurnIfNeeded();
     }
