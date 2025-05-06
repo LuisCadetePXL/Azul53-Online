@@ -2,7 +2,6 @@
 
 namespace Azul.Core.BoardAggregate;
 
-
 /// <summary>
 /// Represents a spot on the board or floor line where a tile can be placed.
 /// </summary>
@@ -27,6 +26,16 @@ public class TileSpot
 
     public void PlaceTile(TileType type)
     {
+        if (HasTile)
+        {
+            throw new InvalidOperationException("Cannot place a tile on a spot that already has a tile.");
+        }
+
+        if (Type != null && Type != type)
+        {
+            throw new InvalidOperationException("Cannot place a tile of a different type on this spot.");
+        }
+
         Type = type;
         HasTile = true;
     }
