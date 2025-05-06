@@ -1,11 +1,11 @@
 ﻿
     const tileTypeToImage = {
-        0: '../images/startingtTile.png',
-        11: '../images/yellowRed.png',
-        12: '../images/plainRed.png',
-        13: '../images/blackBlue.png',
-        14: '../images/whiteTurquoise.png',
-        15: '../images/plainBlue.png'
+        0: './images/startingtTile.png',
+        11: './images/yellowRed.png',
+        12: './images/plainRed.png',
+        13: './images/blackBlue.png',
+        14: './images/whiteTurquoise.png',
+        15: './images/plainBlue.png'
     };
     document.addEventListener('DOMContentLoaded', async () => {
 
