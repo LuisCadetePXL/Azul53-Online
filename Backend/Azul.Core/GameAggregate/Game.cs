@@ -75,7 +75,7 @@ internal class Game : IGame
         IPlayer player = GetPlayerById(playerId);
         IBoard board = player.Board;
 
-        List<TileType> tilesToPlace = player.TilesToPlace.ToList();
+        List<TileType> tilesToPlace = player.TilesToPlace;
 
         board.AddTilesToPatternLine(tilesToPlace, patternLineIndex, TileFactory);
 
