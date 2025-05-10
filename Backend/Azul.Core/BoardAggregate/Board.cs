@@ -4,62 +4,23 @@ using System.Linq;
 
 namespace Azul.Core.BoardAggregate;
 
-/// <inheritdoc cref="IBoard"/>
 internal class Board : IBoard
 {
-    public IPatternLine[] PatternLines { get; } = new IPatternLine[5]; // 5 lijnen voor Azul
-    public TileSpot[,] Wall { get; } = new TileSpot[5, 5]; // 5x5 muur
-    public TileSpot[] FloorLine { get; } = new TileSpot[7]; // Floorline met ruimte voor 7 tegels
+    public IPatternLine[] PatternLines { get; } = new IPatternLine[5];
+    public TileSpot[,] Wall { get; } = new TileSpot[5, 5];
+    public TileSpot[] FloorLine { get; } = new TileSpot[7];
     public int Score { get; private set; } = 0;
-    public bool HasCompletedHorizontalLine
-    {
-        get
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                bool allTiles = true;
-                for (int k = 0; k < 5; k++)
-                {
-                    if (!Wall[i, k].HasTile)
-                    {
-                        allTiles = false;
-                        break;
-                    }
-                }
-                if (allTiles)
-                    return true;
-            }
-            return false;
-        }
-    }
-    public bool HasCompletedVerticalLine
-    {
-        get
-        {
-            for (int k = 0; k < 5; k++)
-            {
-                bool allTiles = true;
-                for (int i = 0; i < 5; i++)
-                {
-                    if (!Wall[i, k].HasTile)
-                    {
-                        allTiles = false;
-                        break;
-                    }
-                }
-                if (allTiles)
-                    return true;
-            }
-            return false;
-        }
-    }
+
+    public bool HasCompletedHorizontalLine => Enumerable.Range(0, 5).Any(i => Enumerable.Range(0, 5).All(k => Wall[i, k].HasTile));
+    public bool HasCompletedVerticalLine => Enumerable.Range(0, 5).Any(k => Enumerable.Range(0, 5).All(i => Wall[i, k].HasTile));
     public bool HasCompletedAllTilesOfAColor
     {
         get
         {
-            for (int color = 0; color < 5; color++)
+            foreach (TileType type in Enum.GetValues(typeof(TileType)))
             {
-                if (Wall.Cast<TileSpot>().Count(ts => ts.HasTile && (int)ts.Type! == 15 + color) == 5)
+                if (type == TileType.StartingTile) continue;
+                if (Wall.Cast<TileSpot>().Count(ts => ts.HasTile && ts.Type == type) == 5)
                 {
                     return true;
                 }
@@ -71,42 +32,39 @@ internal class Board : IBoard
     public Board()
     {
         for (int i = 0; i < 5; i++)
+            PatternLines[i] = new PatternLine(i + 1);
+
+        // ✅ Corrigeer muur met geldige en vaste TileTypes
+        TileType[,] wallLayout = new TileType[5, 5]
         {
-            PatternLines[i] = new PatternLine(i + 1); // Lijnlengtes 1 tot 5
-        }
+            { TileType.PlainBlue, TileType.YellowRed, TileType.PlainRed, TileType.BlackBlue, TileType.WhiteTurquoise },
+            { TileType.WhiteTurquoise, TileType.PlainBlue, TileType.YellowRed, TileType.PlainRed, TileType.BlackBlue },
+            { TileType.BlackBlue, TileType.WhiteTurquoise, TileType.PlainBlue, TileType.YellowRed, TileType.PlainRed },
+            { TileType.PlainRed, TileType.BlackBlue, TileType.WhiteTurquoise, TileType.PlainBlue, TileType.YellowRed },
+            { TileType.YellowRed, TileType.PlainRed, TileType.BlackBlue, TileType.WhiteTurquoise, TileType.PlainBlue }
+        };
 
         for (int i = 0; i < 5; i++)
-        {
             for (int k = 0; k < 5; k++)
-            {
-                Wall[i, k] = new TileSpot((TileType)(15 + k - i));
-            }
-        }
+                Wall[i, k] = new TileSpot(wallLayout[i, k]);
 
         for (int i = 0; i < 7; i++)
-        {
             FloorLine[i] = new TileSpot();
-        }
     }
 
     public void AddTilesToPatternLine(IReadOnlyList<TileType> tilesToAdd, int patternLineIndex, ITileFactory tileFactory)
     {
         if (patternLineIndex < 0 || patternLineIndex >= PatternLines.Length)
-        {
             throw new ArgumentException("Invalid pattern line index.", nameof(patternLineIndex));
-        }
-
         if (tilesToAdd == null || tilesToAdd.Count == 0)
-        {
             throw new ArgumentException("No tiles provided to add.", nameof(tilesToAdd));
-        }
 
         var patternLine = PatternLines[patternLineIndex];
         var validTileType = tilesToAdd.Last();
         var validTiles = tilesToAdd.Where(t => t == validTileType && t != TileType.StartingTile).ToList();
         var overflowTiles = tilesToAdd.Where(t => t != validTileType || t == TileType.StartingTile).ToList();
 
-        // Controleer of de Wall-rij al een tegel van validTileType bevat
+        // ✅ Controle: Heeft deze rij al deze tegelsoort?
         for (int k = 0; k < 5; k++)
         {
             var spot = Wall[patternLineIndex, k];
@@ -122,9 +80,7 @@ internal class Board : IBoard
             {
                 patternLine.TryAddTiles(validTileType, validTiles.Count, out int remainingNumberOfTiles);
                 if (remainingNumberOfTiles > 0)
-                {
                     overflowTiles.AddRange(Enumerable.Repeat(validTileType, remainingNumberOfTiles));
-                }
             }
             catch (InvalidOperationException)
             {
@@ -141,19 +97,13 @@ internal class Board : IBoard
         foreach (var tile in tilesToAdd)
         {
             while (floorLineIndex < FloorLine.Length && FloorLine[floorLineIndex].HasTile)
-            {
                 floorLineIndex++;
-            }
             if (floorLineIndex < FloorLine.Length)
-            {
-                FloorLine[floorLineIndex].PlaceTile(tile);
-                floorLineIndex++;
-            }
+                FloorLine[floorLineIndex++].PlaceTile(tile);
             else
-            {
                 tileFactory.AddToUsedTiles(tile);
-            }
         }
+
         CalculateFloorLinePenalty();
     }
 
@@ -162,87 +112,55 @@ internal class Board : IBoard
         for (int i = 0; i < PatternLines.Length; i++)
         {
             var patternLine = PatternLines[i];
-            if (patternLine.IsComplete)
+            if (!patternLine.IsComplete)
+                continue;
+
+            var tileToPlace = patternLine.TileType;
+            int tileCount = patternLine.NumberOfTiles;
+            int wallRow = i;
+            int wallCol = -1;
+
+            for (int k = 0; k < 5; k++)
             {
-                var tileToPlace = patternLine.TileType;
-                int tileCount = patternLine.NumberOfTiles; // Sla aantal tegels op vóór Clear
-                int wallRow = i;
-                int wallCol = -1;
+                if (Wall[wallRow, k].Type == tileToPlace)
+                {
+                    wallCol = k;
+                    break;
+                }
+            }
 
-                // Find the correct column in the wall for this tile type in this row
-                for (int k = 0; k < 5; k++)
-                {
-                    if (Wall[wallRow, k].Type == tileToPlace)
-                    {
-                        wallCol = k;
-                        break;
-                    }
-                }
-
-                if (wallCol != -1 && !Wall[wallRow, wallCol].HasTile)
-                {
-                    Wall[wallRow, wallCol].PlaceTile(tileToPlace!.Value);
-                    Score += CalculateWallScore(wallRow, wallCol);
-                    patternLine.Clear();
-                    // Return the remaining tiles from the pattern line to the factory
-                    for (int j = 0; j < tileCount - 1; j++)
-                    {
-                        tileFactory.AddToUsedTiles(tileToPlace!.Value);
-                    }
-                }
-                else
-                {
-                    // Should not happen in a valid game state, but handle it defensively
-                    for (int j = 0; j < tileCount; j++)
-                    {
-                        tileFactory.AddToUsedTiles(tileToPlace!.Value);
-                    }
-                    patternLine.Clear();
-                }
+            if (wallCol != -1 && !Wall[wallRow, wallCol].HasTile)
+            {
+                Wall[wallRow, wallCol].PlaceTile(tileToPlace!.Value);
+                Score += CalculateWallScore(wallRow, wallCol);
+                patternLine.Clear();
+                for (int j = 0; j < tileCount - 1; j++)
+                    tileFactory.AddToUsedTiles(tileToPlace!.Value);
+            }
+            else
+            {
+                for (int j = 0; j < tileCount; j++)
+                    tileFactory.AddToUsedTiles(tileToPlace!.Value);
+                patternLine.Clear();
             }
         }
 
-        // Clear the floor line and return tiles to the factory
         foreach (var tileSpot in FloorLine.Where(ts => ts.HasTile))
         {
             tileFactory.AddToUsedTiles(tileSpot.Type!.Value);
             tileSpot.Clear();
         }
+
         ResetFloorLine();
     }
 
     private int CalculateWallScore(int row, int col)
     {
         int score = 1;
-
-        // Check horizontal
-        int left = col - 1;
-        while (left >= 0 && Wall[row, left].HasTile)
-        {
-            score++;
-            left--;
-        }
-        int right = col + 1;
-        while (right < 5 && Wall[row, right].HasTile)
-        {
-            score++;
-            right++;
-        }
-
-        // Check vertical
-        int up = row - 1;
-        while (up >= 0 && Wall[up, col].HasTile)
-        {
-            score++;
-            up--;
-        }
-        int down = row + 1;
-        while (down < 5 && Wall[down, col].HasTile)
-        {
-            score++;
-            down++;
-        }
-
+        for (int i = col - 1; i >= 0 && Wall[row, i].HasTile; i--) score++;
+        for (int i = col + 1; i < 5 && Wall[row, i].HasTile; i++) score++;
+        for (int i = row - 1; i >= 0 && Wall[i, col].HasTile; i--) score++;
+        for (int i = row + 1; i < 5 && Wall[i, col].HasTile; i++) score++;
         return score;
     }
 
@@ -250,40 +168,21 @@ internal class Board : IBoard
     {
         int penalty = 0;
         int tilesOnFloorLine = FloorLine.Count(ts => ts.HasTile);
-
         for (int i = 0; i < tilesOnFloorLine; i++)
-        {
-            if (i == 0 || i == 1) penalty += 1;
-            else if (i == 2 || i == 3) penalty += 2;
-            else penalty += 3;
-        }
-
+            penalty += (i < 2) ? 1 : (i < 4) ? 2 : 3;
         Score = Math.Max(0, Score - penalty);
     }
 
     private void ResetFloorLine()
     {
-        for (int i = 0; i < FloorLine.Length; i++)
-        {
-            FloorLine[i].Clear();
-        }
+        foreach (var spot in FloorLine)
+            spot.Clear();
     }
 
     public void CalculateFinalBonusScores()
     {
-        if (HasCompletedHorizontalLine)
-        {
-            Score += 5;
-        }
-
-        if (HasCompletedVerticalLine)
-        {
-            Score += 2;
-        }
-
-        if (HasCompletedAllTilesOfAColor)
-        {
-            Score += 10;
-        }
+        if (HasCompletedHorizontalLine) Score += 5;
+        if (HasCompletedVerticalLine) Score += 2;
+        if (HasCompletedAllTilesOfAColor) Score += 10;
     }
 }
