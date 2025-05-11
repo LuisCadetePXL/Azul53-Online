@@ -38,7 +38,7 @@ public class GamesControllerIntegrationTests : ControllerIntegrationTestsBase<Ga
         Assert.That(playerA!.HasStartingTile, Is.False, $"Player '{playerA.Name}' should not have the starting tile");
 
         var playerB = AssertIsValidPlayer(PlayerBAccessPass.User, game);
-        Assert.That(playerB!.HasStartingTile, Is.False, $"Player '{playerB.Name}' should have the starting tile (starting tile should be in the table center");
+        Assert.That(playerB!.HasStartingTile, Is.False, $"Player '{playerB.Name}' should not have the starting tile (starting tile should be in the table center");
 
         //Tile factory
         Assert.That(game.TileFactory, Is.Not.Null, "The game should have a tile factory");
