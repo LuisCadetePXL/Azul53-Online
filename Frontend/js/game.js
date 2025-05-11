@@ -264,11 +264,6 @@ function setupTileSelection() {
             // Toon de tegels die verplaatst moeten worden
             showTilesToMove(tilesToTake, tileType, fromCenter);
 
-            // Verwijder de lege fabriek
-            if (allTilesInFactory.length === tilesToCenter.length + tilesToTake.length) {
-                factoryCircle.remove();
-            }
-
             // Maak API call om de actie te bevestigen
             const response = await fetch(`https://localhost:5051/api/Games/${gameId}/take-tiles`, {
                 method: 'POST',
