@@ -5,7 +5,15 @@
     13: './images/blackBlue.png',
     14: './images/whiteTurquoise.png',
     15: './images/plainBlue.png',
-    null: '../images/unknown.png'
+    null: '../images/unknown.png',
+    getImage(type) {
+        const image = this[type];
+        if (!image) {
+            console.warn(`Onbekende tileType: ${type}`);
+            return this[null];
+        }
+        return image;
+    }
 };
 
 // Game state
@@ -20,6 +28,16 @@ let selectedTiles = {
     includesStarterTile: false
 };
 let pollingInterval = null;
+let firstPlayerNextRound = null;
+
+// Azul wall pattern
+const wallPatterns = [
+    [15, 11, 12, 13, 14], // Rij 0: blauw, geel, rood, zwart, wit
+    [14, 15, 11, 12, 13], // Rij 1: wit, blauw, geel, rood, zwart
+    [13, 14, 15, 11, 12], // Rij 2: zwart, wit, blauw, geel, rood
+    [12, 13, 14, 15, 11], // Rij 3: rood, zwart, wit, blauw, geel
+    [11, 12, 13, 14, 15]  // Rij 4: geel, rood, zwart, wit, blauw
+];
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = sessionStorage.getItem('token');
@@ -27,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentUsername = sessionStorage.getItem('username');
 
     if (!token || !tableId || !currentUsername) {
+        console.error('Missing token, tableId, or username');
         window.location.href = "lobby.html";
         return;
     }
@@ -69,11 +88,11 @@ function startPolling(gameId, token) {
 
             if (gameData?.hasEnded) {
                 stopPolling();
-                showNotification('Game has ended!');
+                showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
             }
         } catch (err) {
             console.error('Polling error:', err);
-            showNotification('Error refreshing game state');
+            showNotification('Error bij verversen spelstatus');
         }
     }, 2000);
 }
@@ -93,6 +112,14 @@ async function loadAndRenderGame(gameId, token) {
         const selfPlayer = gameData.players.find(p => p.name === currentUsername);
         currentPlayerId = selfPlayer?.id;
 
+        console.log('Game Data:', JSON.stringify(gameData, null, 2));
+
+        if (!gameData.players || gameData.players.length === 0) {
+            console.error('Geen spelers gevonden in gameData');
+            showNotification('Fout: Geen spelersdata beschikbaar');
+            return;
+        }
+
         renderBoardsAndFactory(gameData);
         renderScores(gameData.players);
 
@@ -103,13 +130,26 @@ async function loadAndRenderGame(gameId, token) {
         updateActivePlayerDisplay(gameData);
     } catch (err) {
         console.error('Error loading game:', err);
+        showNotification('Fout bij laden van speldata');
         throw err;
     }
 }
 
 function renderBoardsAndFactory(gameData) {
+    console.log('Rendering game data:', gameData);
     const container = document.getElementById('boardsContainer');
+    if (!container) {
+        console.error('boardsContainer element niet gevonden');
+        showNotification('Fout: Spelborden container niet gevonden');
+        return;
+    }
     container.innerHTML = '';
+
+    if (!gameData.players || !Array.isArray(gameData.players)) {
+        console.error('Ongeldige spelersdata:', gameData.players);
+        showNotification('Fout: Ongeldige spelersdata');
+        return;
+    }
 
     const spots = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
     const sortedPlayers = [...gameData.players].sort((a, b) => a.id === currentPlayerId ? -1 : 0);
@@ -125,7 +165,7 @@ function renderBoardsAndFactory(gameData) {
             const apiLine = player.board?.patternLines?.[rowIndex] || { length: rowIndex + 1, tileType: null, numberOfTiles: 0, isComplete: false };
             const tiles = Array(rowIndex + 1).fill(null);
             for (let i = 0; i < apiLine.numberOfTiles && i < tiles.length; i++) {
-                tiles[i] = apiLine.tileType;
+                tiles[tiles.length - 1 - i] = apiLine.tileType; // Fill from right to left
             }
             return { tiles };
         });
@@ -133,15 +173,14 @@ function renderBoardsAndFactory(gameData) {
         let wall = Array(5).fill().map(() => Array(5).fill(null));
         if (player.board?.wall && Array.isArray(player.board.wall)) {
             player.board.wall.forEach((tile, idx) => {
-                if (typeof tile !== "string") {
-                    const row = Math.floor(idx / 5);
-                    const col = idx % 5;
-                    if (row < 5 && col < 5) {
-                        wall[row][col] = { type: parseInt(tile) || null };
-                    }
+                const row = Math.floor(idx / 5);
+                const col = idx % 5;
+                if (row < 5 && col < 5 && tile != null) {
+                    wall[row][col] = Number(tile) || null;
                 }
             });
         }
+        console.log(`Wall voor speler ${player.name}:`, wall); // Debug wall data
 
         const penaltyLine = player.board?.floorLine?.map(f => f.hasTile ? f.type : null) || Array(7).fill(null);
         const penalties = player.board?.penalties || 0;
@@ -152,7 +191,7 @@ function renderBoardsAndFactory(gameData) {
 
             return `<div class="pattern-row" data-row-index="${rowIndex}">${tiles.map((tile, i) =>
                 tile !== null
-                    ? `<img src="${tileTypeToImage[tile] || tileTypeToImage[null]}" class="tile-image pattern-tile" data-tile-type="${tile}" data-row="${rowIndex}" data-pos="${i}">`
+                    ? `<img src="${tileTypeToImage.getImage(tile)}" class="tile-image pattern-tile" data-tile-type="${tile}" data-row="${rowIndex}" data-pos="${i}">`
                     : `<div class="tile pattern-tile" data-row="${rowIndex}" data-pos="${i}"></div>`
             ).join('')}</div>`;
         }).join('');
@@ -167,10 +206,10 @@ function renderBoardsAndFactory(gameData) {
                 </div>
                 <div class="wall-grid">
                     ${wall.map((row, rowIdx) =>
-            row.map((cell, colIdx) => {
-                if (cell) {
-                    const src = tileTypeToImage[cell.type] || tileTypeToImage[null];
-                    return `<img src="${src}" class="tile-image board-tile" alt="Tile ${cell.type}" data-row="${rowIdx}" data-col="${colIdx}">`;
+            row.map((tile, colIdx) => {
+                if (tile !== null) {
+                    const src = tileTypeToImage.getImage(tile);
+                    return `<img src="${src}" class="tile-image board-tile placed-tile" alt="Tile ${tile}" data-row="${rowIdx}" data-col="${colIdx}" data-tile-type="${tile}">`;
                 }
                 return `<div class="tile empty-tile" data-row="${rowIdx}" data-col="${colIdx}"></div>`;
             }).join('')
@@ -184,7 +223,7 @@ function renderBoardsAndFactory(gameData) {
                 <div class="floor-line-tiles" id="penalty-line-${player.id}">
                     ${penaltyLine.map((tile, i) =>
             tile !== null
-                ? `<img src="${tileTypeToImage[tile] || tileTypeToImage[null]}" class="tile-image penalty-tile" data-tile-type="${tile}" data-pos="${i}">`
+                ? `<img src="${tileTypeToImage.getImage(tile)}" class="tile-image penalty-tile" data-tile-type="${tile}" data-pos="${i}">`
                 : `<div class="penalty-tile" data-pos="${i}"></div>`
         ).join('')}
                 </div>
@@ -192,20 +231,26 @@ function renderBoardsAndFactory(gameData) {
             </div>
             <div class="player-name">${player.name}</div>
         `;
-        container.appendChild(board);
+        try {
+            container.appendChild(board);
+            console.log(`Board toegevoegd voor ${player.name} at spot ${spots[index]}`);
+        } catch (err) {
+            console.error(`Fout bij toevoegen board voor ${player.name}:`, err);
+            showNotification(`Fout bij toevoegen board voor ${player.name}`);
+        }
     });
 
     renderFactoryDisplays(gameData, container);
 
-    document.getElementById('roundInfo').textContent = `Ronde ${gameData.roundNumber}`;
+    document.getElementById('roundInfo').textContent = `Ronde ${gameData.roundNumber || 0}`;
 }
 
 function renderFactoryDisplays(gameData, container) {
     const center = document.createElement('div');
     center.className = 'circle-container';
 
-    const factories = gameData.tileFactory.displays;
-    const tableCenter = gameData.tileFactory.tableCenter;
+    const factories = gameData.tileFactory?.displays || [];
+    const tableCenter = gameData.tileFactory?.tableCenter || { id: 'center', tiles: [] };
     const playerCount = gameData.players.length;
     const expected = { 2: 5, 3: 7, 4: 9 }[playerCount] || factories.length;
 
@@ -227,7 +272,7 @@ function renderFactoryDisplays(gameData, container) {
         el.innerHTML = `
             <div class="tile-grid">
                 ${disc.tiles.map(tile => {
-            const src = tileTypeToImage[tile] || tileTypeToImage[null];
+            const src = tileTypeToImage.getImage(tile);
             return `<img src="${src}" class="tile-image factory-tile" alt="Tile ${tile}" data-tile-type="${tile}">`;
         }).join('')}
             </div>
@@ -241,7 +286,7 @@ function renderFactoryDisplays(gameData, container) {
     centerCircle.innerHTML = `
         <div class="tile-grid">
             ${tableCenter.tiles.map(tile => {
-        const src = tileTypeToImage[tile] || tileTypeToImage[null];
+        const src = tileTypeToImage.getImage(tile);
         return `<img src="${src}" class="tile-image center-tile" alt="Tile ${tile}" data-tile-type="${tile}">`;
     }).join('')}
         </div>
@@ -278,6 +323,19 @@ function setupTileSelection() {
         const fromCenter = factoryCircle.classList.contains('center-circle');
         const factoryId = factoryCircle.dataset.factoryId;
 
+        if (!factoryId || tileType == null) {
+            showNotification('Ongeldige selectie: Factory ID of tileType ontbreekt');
+            return;
+        }
+
+        const factory = fromCenter
+            ? currentGameData.tileFactory.tableCenter
+            : currentGameData.tileFactory.displays.find(d => d.id === factoryId);
+        if (!factory || !factory.tiles.includes(tileType)) {
+            showNotification('Ongeldige factory of tegeltype!');
+            return;
+        }
+
         try {
             const allTilesInFactory = Array.from(factoryCircle.querySelectorAll('.tile-image'));
             const tilesToTake = allTilesInFactory.filter(tile => parseInt(tile.dataset.tileType) === tileType);
@@ -305,6 +363,18 @@ function setupTileSelection() {
                 factoryId: factoryId,
                 includesStarterTile: fromCenter && allTilesInFactory.some(tile => parseInt(tile.dataset.tileType) === 0)
             };
+
+            if (selectedTiles.includesStarterTile && fromCenter) {
+                firstPlayerNextRound = currentPlayerId;
+                console.log(`Player ${currentPlayerId} took starting tile, will start next round`);
+            }
+
+            console.log('Take Tiles Request:', {
+                gameId,
+                displayId: factoryId,
+                tileType,
+                token: token.substring(0, 10) + '...'
+            });
 
             const response = await fetch(`https://localhost:5051/api/Games/${gameId}/take-tiles`, {
                 method: 'POST',
@@ -341,7 +411,7 @@ function getPatternLineStatus(patternLines, rowIndex, tileType) {
     const apiLine = patternLines[rowIndex] || { length: rowIndex + 1, tileType: null, numberOfTiles: 0, isComplete: false };
     const tilesArray = Array(rowIndex + 1).fill(null);
     for (let i = 0; i < apiLine.numberOfTiles && i < tilesArray.length; i++) {
-        tilesArray[i] = apiLine.tileType;
+        tilesArray[tilesArray.length - 1 - i] = apiLine.tileType; // Fill from right to left
     }
     const lineLength = rowIndex + 1;
     const currentTiles = tilesArray.filter(t => t !== null).length;
@@ -382,9 +452,9 @@ function showTilesToMove(tiles, tileType, fromCenter) {
     moveContainer.innerHTML = `
         <div class="tiles-preview">
             ${Array.from({ length: tiles.length }, () =>
-        `<img src="${tileTypeToImage[tileType] || tileTypeToImage[null]}" class="tile-image" alt="Tile ${tileType}">`
+        `<img src="${tileTypeToImage.getImage(tileType)}" class="tile-image" alt="Tile ${tileType}">`
     ).join('')}
-            ${fromCenter && selectedTiles.includesStarterTile ? `<img src="${tileTypeToImage[0] || tileTypeToImage[null]}" class="tile-image" alt="Starter Tile">` : ''}
+            ${fromCenter && selectedTiles.includesStarterTile ? `<img src="${tileTypeToImage.getImage(0)}" class="tile-image" alt="Starter Tile">` : ''}
         </div>
         <div class="row-options">
             ${validRows.length > 0 ? validRows.map(row => {
@@ -402,9 +472,8 @@ function showTilesToMove(tiles, tileType, fromCenter) {
 
     document.body.appendChild(moveContainer);
 
-    // Als er geen geldige rijen zijn, gaan alle tegels automatisch naar de penalty line
     if (validRows.length === 0) {
-        placeTilesOnPatternLine(-1); // Gebruik -1 om aan te geven dat tegels direct naar penalty line gaan
+        placeTilesOnPatternLine(-1);
     }
 }
 
@@ -439,11 +508,15 @@ async function placeTilesOnPatternLine(rowIndex) {
         let lineLength = rowIndex + 1;
         let availableSlots = 0;
 
+        if (selectedTiles.includesStarterTile) {
+            tilesToPlace -= 1;
+        }
+
         if (rowIndex >= 0) {
             const patternLine = selfPlayer.board.patternLines[rowIndex] || { length: rowIndex + 1, tileType: null, numberOfTiles: 0, isComplete: false };
             tilesArray = Array(rowIndex + 1).fill(null);
             for (let i = 0; i < patternLine.numberOfTiles && i < tilesArray.length; i++) {
-                tilesArray[i] = patternLine.tileType;
+                tilesArray[tilesArray.length - 1 - i] = patternLine.tileType;
             }
             lineLength = rowIndex + 1;
             currentTiles = tilesArray.filter(t => t !== null).length;
@@ -463,6 +536,7 @@ async function placeTilesOnPatternLine(rowIndex) {
                     tilesPlaced++;
                 }
             }
+            console.log(`Tiles placed in row ${rowIndex}:`, tilesArray);
         }
 
         let excessTiles = tilesToPlace - tilesPlaced;
@@ -579,8 +653,8 @@ async function placeTilesOnPatternLine(rowIndex) {
 }
 
 function isRoundOver(gameData) {
-    const factories = gameData.tileFactory.displays;
-    const tableCenter = gameData.tileFactory.tableCenter;
+    const factories = gameData.tileFactory?.displays || [];
+    const tableCenter = gameData.tileFactory?.tableCenter || { tiles: [] };
     const allFactoriesEmpty = factories.every(factory => factory.tiles.length === 0);
     const tableCenterEmpty = tableCenter.tiles.length === 0;
     return allFactoriesEmpty && tableCenterEmpty;
@@ -589,6 +663,10 @@ function isRoundOver(gameData) {
 async function handleEndOfRound(gameId, token) {
     try {
         let updatedGameData = { ...currentGameData };
+        let gameHasEnded = false;
+
+        console.log('Starting handleEndOfRound for gameId:', gameId);
+
         const players = updatedGameData.players.map(player => {
             let score = player.score || 0;
             let penalties = player.board.penalties || 0;
@@ -596,30 +674,44 @@ async function handleEndOfRound(gameId, token) {
             let wall = Array(5).fill().map(() => Array(5).fill(null));
             if (player.board.wall && Array.isArray(player.board.wall)) {
                 player.board.wall.forEach((tile, idx) => {
-                    if (typeof tile !== "string") {
-                        const row = Math.floor(idx / 5);
-                        const col = idx % 5;
-                        if (row < 5 && col < 5) {
-                            wall[row][col] = { type: parseInt(tile) || null };
-                        }
+                    const row = Math.floor(idx / 5);
+                    const col = idx % 5;
+                    if (row < 5 && col < 5 && tile != null) {
+                        wall[row][col] = Number(tile) || null;
                     }
                 });
             }
             let penaltyLine = player.board.floorLine?.map(f => f.hasTile ? f.type : null) || Array(7).fill(null);
 
+            console.log(`Processing player ${player.name}, initial wall:`, wall);
+
             patternLines.forEach((line, rowIndex) => {
                 if (line.isComplete) {
                     const tileType = line.tileType;
                     const colIndex = getWallPosition(rowIndex, tileType);
-                    if (colIndex !== -1 && !wall[rowIndex][colIndex]) {
-                        wall[rowIndex][colIndex] = { type: tileType };
+                    console.log(`Pattern line ${rowIndex} complete for ${player.name}, tileType: ${tileType}, colIndex: ${colIndex}`);
+                    if (colIndex !== -1 && wall[rowIndex][colIndex] === null) {
+                        wall[rowIndex][colIndex] = tileType;
                         score += calculateScore(wall, rowIndex, colIndex);
+                        console.log(`Placed tile ${tileType} on wall at row ${rowIndex}, col ${colIndex} for player ${player.name}, score added: ${calculateScore(wall, rowIndex, colIndex)}`);
+                    } else {
+                        console.warn(`Cannot place tile ${tileType} at row ${rowIndex}, col ${colIndex} for ${player.name}: colIndex invalid or position occupied`);
                     }
                     line.tileType = null;
                     line.numberOfTiles = 0;
                     line.isComplete = false;
                 }
             });
+
+            console.log(`Updated wall for ${player.name}:`, wall);
+
+            const wallGrid = wall;
+            for (let row = 0; row < 5; row++) {
+                if (wallGrid[row].every(tile => tile !== null)) {
+                    gameHasEnded = true;
+                    console.log(`Speler ${player.name} heeft rij ${row} voltooid! Spel zal eindigen na deze ronde.`);
+                }
+            }
 
             const penaltyValues = [-1, -1, -2, -2, -2, -3, -3];
             penalties = penaltyLine.reduce((acc, tile, idx) => {
@@ -638,17 +730,28 @@ async function handleEndOfRound(gameId, token) {
                 board: {
                     ...player.board,
                     patternLines,
-                    wall,
+                    wall: wall.flat(), // Convert to flat array for server
                     floorLine: penaltyLine.map(type => ({ hasTile: type !== null, type })),
                     penalties: 0
                 }
             };
         });
 
+        let nextPlayerId = updatedGameData.playerToPlayId;
+        if (firstPlayerNextRound) {
+            nextPlayerId = firstPlayerNextRound;
+            console.log(`Setting next round's first player to ${firstPlayerNextRound}`);
+            firstPlayerNextRound = null;
+        }
+
         updatedGameData = {
-            ...updatedGameData,
-            players
+            ...currentGameData,
+            players,
+            playerToPlayId: nextPlayerId,
+            hasEnded: gameHasEnded
         };
+
+        console.log('Updated game data before API call:', updatedGameData);
 
         currentGameData = updatedGameData;
         renderBoardsAndFactory(currentGameData);
@@ -665,43 +768,48 @@ async function handleEndOfRound(gameId, token) {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Fout bij einde ronde');
+            console.error('API error in end-round:', error);
+            throw new Error(error.message || 'Fout bij afhandelen einde ronde');
         }
 
         const newGameData = await fetchGameData(gameId, token);
+        console.log('New game data from server:', newGameData);
         currentGameData = newGameData;
         renderBoardsAndFactory(currentGameData);
+
+        if (gameHasEnded) {
+            showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
+        }
+
     } catch (err) {
-        console.error('Fout bij afhandeling einde ronde:', err);
-        showNotification('Fout bij verwerken einde ronde');
+        console.error('Fout in handleEndOfRound:', err);
+        showNotification('Fout bij verwerken einde ronde: ' + err.message);
+        const updatedGameData = await fetchGameData(gameId, token);
+        currentGameData = updatedGameData;
+        renderBoardsAndFactory(currentGameData);
     }
 }
 
 function getWallPosition(rowIndex, tileType) {
-    const wallPatterns = [
-        [15, 11, 12, 13, 14],
-        [14, 15, 11, 12, 13],
-        [13, 14, 15, 11, 12],
-        [12, 13, 14, 15, 11],
-        [11, 12, 13, 14, 15]
-    ];
-    const rowPattern = wallPatterns[rowIndex];
-    return rowPattern.indexOf(tileType);
+    const colIndex = wallPatterns[rowIndex].indexOf(tileType);
+    console.log(`getWallPosition: row=${rowIndex}, tileType=${tileType}, colIndex=${colIndex}`);
+    return colIndex;
 }
 
 function calculateScore(wall, row, col) {
     let score = 0;
 
     let hCount = 1;
-    for (let c = col - 1; c >= 0 && wall[row][c]; c--) hCount++;
-    for (let c = col + 1; c < 5 && wall[row][c]; c++) hCount++;
+    for (let c = col - 1; c >= 0 && wall[row][c] !== null; c--) hCount++;
+    for (let c = col + 1; c < 5 && wall[row][c] !== null; c++) hCount++;
     if (hCount > 0) score += hCount;
 
     let vCount = 1;
-    for (let r = row - 1; r >= 0 && wall[r][col]; r--) vCount++;
-    for (let r = row + 1; r < 5 && wall[r][col]; r++) vCount++;
+    for (let r = row - 1; r >= 0 && wall[r][col] !== null; r--) vCount++;
+    for (let r = row + 1; r < 5 && wall[r][col] !== null; r++) vCount++;
     if (vCount > 0) score += vCount;
 
+    console.log(`calculateScore: row=${row}, col=${col}, hCount=${hCount}, vCount=${vCount}, total=${score || 1}`);
     return score === 0 ? 1 : score;
 }
 
@@ -711,7 +819,7 @@ function updatePatternLineUI(playerId, rowIndex, tilesArray) {
 
     patternRow.innerHTML = tilesArray.map((tile, i) => {
         if (tile !== null) {
-            return `<img src="${tileTypeToImage[tile] || tileTypeToImage[null]}" class="tile-image pattern-tile" data-tile-type="${tile}" data-row="${rowIndex}" data-pos="${i}">`;
+            return `<img src="${tileTypeToImage.getImage(tile)}" class="tile-image pattern-tile" data-tile-type="${tile}" data-row="${rowIndex}" data-pos="${i}">`;
         }
         return `<div class="tile pattern-tile" data-row="${rowIndex}" data-pos="${i}"></div>`;
     }).join('');
@@ -723,7 +831,7 @@ function updatePenaltyLineUI(playerId, penaltyLine) {
 
     penaltyLineContainer.innerHTML = penaltyLine.map((tile, i) =>
         tile !== null
-            ? `<img src="${tileTypeToImage[tile] || tileTypeToImage[null]}" class="tile-image penalty-tile" data-tile-type="${tile}" data-pos="${i}">`
+            ? `<img src="${tileTypeToImage.getImage(tile)}" class="tile-image penalty-tile" data-tile-type="${tile}" data-pos="${i}">`
             : `<div class="penalty-tile" data-pos="${i}"></div>`
     ).join('');
 }
@@ -744,24 +852,51 @@ function resetSelection() {
 }
 
 async function fetchTableData(tableId, token) {
-    const res = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Fout bij ophalen tableData");
-    return await res.json();
+    try {
+        const res = await fetch(`https://localhost:5051/api/Tables/${tableId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Fout bij ophalen tableData');
+        }
+        return await res.json();
+    } catch (err) {
+        console.error('fetchTableData error:', err);
+        throw err;
+    }
 }
 
 async function fetchGameData(gameId, token) {
-    const res = await fetch(`https://localhost:5051/api/Games/${gameId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Fout bij ophalen gameData");
-    return await res.json();
+    try {
+        const res = await fetch(`https://localhost:5051/api/Games/${gameId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Fout bij ophalen gameData');
+        }
+        return await res.json();
+    } catch (err) {
+        console.error('fetchGameData error:', err);
+        throw err;
+    }
 }
 
 function renderScores(players) {
     const scorePanel = document.getElementById('scorePanel');
+    if (!scorePanel) {
+        console.error('scorePanel element niet gevonden');
+        showNotification('Fout: Scorepaneel niet gevonden');
+        return;
+    }
     scorePanel.innerHTML = '';
+
+    if (!players || !Array.isArray(players)) {
+        console.error('Ongeldige spelersdata voor scores:', players);
+        showNotification('Fout: Geen spelersdata voor scores');
+        return;
+    }
 
     players.forEach(player => {
         const playerScore = document.createElement('div');
@@ -773,14 +908,15 @@ function renderScores(players) {
 function updateActivePlayerDisplay(gameData) {
     const activePlayer = gameData.players.find(p => p.id === gameData.playerToPlayId);
     const activePlayerDisplay = document.getElementById('activePlayer');
-    activePlayerDisplay.textContent = `Aan de beurt: ${activePlayer?.name || 'Onbekend'}`;
-
-    if (currentPlayerId === gameData.playerToPlayId) {
-        activePlayerDisplay.classList.add('your-turn');
-        activePlayerDisplay.classList.remove('not-your-turn');
-    } else {
-        activePlayerDisplay.classList.add('not-your-turn');
-        activePlayerDisplay.classList.remove('your-turn');
+    if (activePlayerDisplay) {
+        activePlayerDisplay.textContent = `Aan de beurt: ${activePlayer?.name || 'Onbekend'}`;
+        if (currentPlayerId === gameData.playerToPlayId) {
+            activePlayerDisplay.classList.add('your-turn');
+            activePlayerDisplay.classList.remove('not-your-turn');
+        } else {
+            activePlayerDisplay.classList.add('not-your-turn');
+            activePlayerDisplay.classList.remove('your-turn');
+        }
     }
 }
 
