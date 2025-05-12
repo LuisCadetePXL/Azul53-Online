@@ -1,10 +1,10 @@
-﻿using Azul.Core.BoardAggregate.Contracts;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Azul.Core.BoardAggregate.Contracts;
 using Azul.Core.GameAggregate.Contracts;
-using Azul.Core.PlayerAggregate;
 using Azul.Core.PlayerAggregate.Contracts;
 using Azul.Core.TileFactoryAggregate.Contracts;
-using System;
-using System.Linq;
 
 namespace Azul.Core.GameAggregate;
 
@@ -14,9 +14,22 @@ internal class Game : IGame
     private readonly Random _random = new Random();
     private int _currentPlayerIndex = 0;
 
+    public Guid Id { get; }
+    public ITileFactory TileFactory { get; }
+    public IPlayer[] Players { get; }
+    public Guid PlayerToPlayId { get; private set; }
+    public int RoundNumber { get; private set; }
+    public bool HasEnded { get; private set; }
+
     public Game(Guid id, ITileFactory tileFactory, IPlayer[] players)
     {
-        if (players == null || players.Length != 2)
+        if (id == Guid.Empty)
+            throw new ArgumentException("Game ID cannot be empty.", nameof(id));
+        if (tileFactory == null)
+            throw new ArgumentNullException(nameof(tileFactory));
+        if (players == null || !players.Any())
+            throw new ArgumentException("At least one player is required.", nameof(players));
+        if (players.Length != 2)  // Adjusted to match original constraint
             throw new ArgumentException("Game requires exactly 2 players.");
 
         Id = id;
@@ -35,37 +48,22 @@ internal class Game : IGame
         _currentPlayerIndex = Array.FindIndex(players, p => p.Id == PlayerToPlayId);
     }
 
-    public Guid Id { get; }
-    public ITileFactory TileFactory { get; }
-    public IPlayer[] Players { get; }
-    public Guid PlayerToPlayId { get; private set; }
-    public int RoundNumber { get; private set; }
-    public bool HasEnded { get; private set; }
-
     public void TakeTilesFromFactory(Guid playerId, Guid displayId, TileType tileType)
     {
         EnsurePlayersTurn(playerId);
 
         IPlayer player = GetPlayerById(playerId);
-        if (player.TilesToPlace.Count > 0)
+        if (player.TilesToPlace.Any())
             throw new InvalidOperationException("Player must place previously taken tiles before taking new ones.");
 
         var tiles = TileFactory.TakeTiles(displayId, tileType);
+        if (!tiles.Any())
+            throw new InvalidOperationException("No tiles taken from factory.");
 
-        foreach (var tile in tiles)
-        {
-            if (tile == TileType.StartingTile) { 
+        player.TilesToPlace.AddRange(tiles);
+        if (tiles.Contains(TileType.StartingTile))
             player.HasStartingTile = true;
-            player.TilesToPlace.Add(tile); 
-            }
-            else
-            {
-                player.TilesToPlace.Add(tile);
-            }
-        }
-
     }
-
 
     public void PlaceTilesOnPatternLine(Guid playerId, int patternLineIndex)
     {
@@ -75,13 +73,11 @@ internal class Game : IGame
         IPlayer player = GetPlayerById(playerId);
         IBoard board = player.Board;
 
-        List<TileType> tilesToPlace = player.TilesToPlace;
-
-        board.AddTilesToPatternLine(tilesToPlace, patternLineIndex, TileFactory);
-
+        // Pass the original TilesToPlace list and clear afterward
+        board.AddTilesToPatternLine(player.TilesToPlace, patternLineIndex, TileFactory);
         player.TilesToPlace.Clear();
 
-        AdvanceTurnIfNeeded();
+        AdvanceTurn();
     }
 
     public void PlaceTilesOnFloorLine(Guid playerId)
@@ -89,13 +85,13 @@ internal class Game : IGame
         EnsurePlayersTurn(playerId);
         EnsurePlayerHasTilesToPlace(playerId);
 
-        var player = GetPlayerById(playerId);
-        var tilesToPlace = player.TilesToPlace.ToList();
+        IPlayer player = GetPlayerById(playerId);
+
+        // Pass the original TilesToPlace list and clear afterward
+        player.Board.AddTilesToFloorLine(player.TilesToPlace, TileFactory);
         player.TilesToPlace.Clear();
 
-        player.Board.AddTilesToFloorLine(tilesToPlace, TileFactory);
-
-        AdvanceTurnIfNeeded();
+        AdvanceTurn();
     }
 
     // ==============================
@@ -117,22 +113,20 @@ internal class Game : IGame
     private void EnsurePlayerHasTilesToPlace(Guid playerId)
     {
         var player = GetPlayerById(playerId);
-        if (player.TilesToPlace.Count == 0)
+        if (!player.TilesToPlace.Any())
             throw new InvalidOperationException("Player has no tiles to place.");
     }
 
-    private void AdvanceTurnIfNeeded()
+    private void AdvanceTurn()
     {
         if (TileFactory.IsEmpty)
         {
-            // Einde van de ronde
+            // End of round
             foreach (var player in Players)
             {
                 player.Board.DoWallTiling(TileFactory);
                 player.HasStartingTile = false;
             }
-
-            RoundNumber++;
 
             if (Players.Any(p => p.Board.HasCompletedHorizontalLine))
             {
@@ -143,6 +137,8 @@ internal class Game : IGame
                 return;
             }
 
+            RoundNumber++;
+
             TileFactory.FillDisplays();
             TileFactory.TableCenter.AddStartingTile();
 
@@ -151,7 +147,7 @@ internal class Game : IGame
         }
         else
         {
-            // Volgende speler
+            // Advance to next player
             _currentPlayerIndex = (_currentPlayerIndex + 1) % Players.Length;
             PlayerToPlayId = Players[_currentPlayerIndex].Id;
         }
