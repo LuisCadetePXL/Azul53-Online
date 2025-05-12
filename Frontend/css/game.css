@@ -24,18 +24,18 @@ body {
     align-items: center;
 }
 
-.title-bar button {
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-}
+    .title-bar button {
+        background-color: #ff4d4d;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
 
-.title-bar button:hover {
-    background-color: #e60000;
-}
+        .title-bar button:hover {
+            background-color: #e60000;
+        }
 
 .game-info {
     display: flex;
@@ -79,9 +79,9 @@ main {
     margin-top: 30px;
 }
 
-.board.current-player {
-    border: 3px solid #007acc;
-}
+    .board.current-player {
+        border: 3px solid #007acc;
+    }
 
 .board-top {
     display: flex;
@@ -114,9 +114,9 @@ main {
     padding-top: 8px;
 }
 
-.arrows div {
-    font-size: 0.7rem;
-}
+    .arrows div {
+        font-size: 0.7rem;
+    }
 
 .wall-grid {
     width: 50%;
@@ -164,6 +164,12 @@ main {
     border-radius: 3px;
 }
 
+.penalties {
+    text-align: center;
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
 .player-name {
     margin-top: 8px;
     font-weight: bold;
@@ -203,10 +209,10 @@ main {
     box-shadow: none;
 }
 
-.center-circle img {
-    object-fit: contain;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
-}
+    .center-circle img {
+        object-fit: contain;
+        box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
 
 .score-panel {
     width: 220px;
@@ -253,17 +259,17 @@ main {
     position: relative;
 }
 
-.tile-image:hover {
-    transform: scale(1.2);
-    box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.7);
-    z-index: 10;
-}
+    .tile-image:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.7);
+        z-index: 10;
+    }
 
-.tile-image.selected {
-    outline: 3px solid gold;
-    box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.7);
-    transform: scale(1.1);
-}
+    .tile-image.selected {
+        outline: 3px solid gold;
+        box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.7);
+        transform: scale(1.1);
+    }
 
 .your-turn {
     color: #2e7d32;
@@ -289,13 +295,27 @@ main {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 @keyframes fadeOut {
-    from { opacity: 1; transform: translateX(-50%) translateY(0); }
-    to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
 }
 
 .selection-panel {
@@ -324,42 +344,30 @@ main {
     gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: 15px;
 }
 
-.row-option, .floor-option {
+.row-option {
     padding: 10px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.2s;
-}
-
-.row-option {
     background-color: #4CAF50;
     color: white;
 }
 
-.row-option:hover:not(:disabled) {
-    background-color: #45a049;
-    transform: translateY(-2px);
-}
+    .row-option:hover:not(:disabled) {
+        background-color: #45a049;
+        transform: translateY(-2px);
+    }
 
-.row-option.disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-.floor-option {
-    background-color: #f44336;
-    color: white;
-}
-
-.floor-option:hover {
-    background-color: #d32f2f;
-    transform: translateY(-2px);
-}
+    .row-option.disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
 
 .tile-grid {
     display: flex;
@@ -382,87 +390,57 @@ main {
     filter: brightness(0.8);
 }
 
-.board-tile:hover {
-    opacity: 1;
-    filter: brightness(1);
-}
+    .board-tile:hover {
+        opacity: 1;
+        filter: brightness(1);
+    }
 
 .floor-tile {
     border: 1px solid #999;
 }
 
-
-.row-options {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 15px;
-}
-
-.row-option, .floor-option {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-.row-option {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.row-option:hover {
-    background-color: #45a049;
-}
-
-.row-option.disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
 .tiles-to-move-container {
-    background-color: peru;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
     border: 2px solid #ccc;
     border-radius: 12px;
-    padding: 10px;
-    font-size: 0.85rem;
-    min-width: 100px;
-    min-height: 250px;
-    max-height: 350px;
+    padding: 15px;
+    font-size: 0.9rem;
+    min-width: 300px;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    position: relative;
-    margin-top: 30px;
-}
-
-.tiles-to-move-container .tiles-preview {
-    display: flex;
-    flex-direction: column;
-    width: fit-content;
-    gap: 5px;
     align-items: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    z-index: 1000;
 }
 
-.tiles-to-move-container .tile-image {
-    width: 30px;
-    height: 30px;
-    margin: 2px;
-}
+    .tiles-to-move-container .tiles-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+        margin-bottom: 15px;
+    }
 
-.tiles-to-move-container .row-options {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    width: 100%;
-}
+    .tiles-to-move-container .tile-image {
+        width: 30px;
+        height: 30px;
+        margin: 2px;
+    }
 
-.tiles-to-move-container .row-option,
-.tiles-to-move-container .floor-option {
-    padding: 5px 8px;
-    font-size: 0.8rem;
-    width: 100%;
-}
+    .tiles-to-move-container .row-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .tiles-to-move-container .row-option {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        width: 100%;
+    }
