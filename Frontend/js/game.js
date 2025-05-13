@@ -193,7 +193,7 @@ function renderBoardsAndFactory(gameData) {
         console.log(`Wall voor speler ${player.name}:`, wall);
 
         const penaltyLine = player.board?.floorLine?.map(f => f.hasTile ? f.type : null) || Array(7).fill(null);
-        const penalties = player.board?.penalties || 0;
+        const penalties = player.board?.floorLine.filter(p => p.hasTile).length || 0;
 
         const patternRows = patternLines.map((line, rowIndex) => {
             const tilesInRow = rowIndex + 1;
