@@ -84,6 +84,7 @@ function startPolling(gameId, token) {
 
             renderBoardsAndFactory(gameData);
             renderScores(gameData.players);
+            updateActivePlayerDisplay(gameData); // Toegevoegd
 
             if (isRoundOver(gameData)) {
                 await handleEndOfRound(gameId, token);
@@ -676,144 +677,53 @@ function isRoundOver(gameData) {
 
 async function handleEndOfRound(gameId, token) {
     try {
-        let updatedGameData = { ...currentGameData };
-        let gameHasEnded = false;
-
         console.log('Starting handleEndOfRound for gameId:', gameId);
 
-        const players = updatedGameData.players.map(player => {
-            let score = player.score || 0;
-            let penalties = player.board.penalties || 0;
-            const patternLines = player.board.patternLines || Array(5).fill().map((_, i) => ({ length: i + 1, tileType: null, numberOfTiles: 0, isComplete: false }));
-            let wall = Array(5).fill().map(() => Array(5).fill(null));
-            if (player.board.wall && Array.isArray(player.board.wall)) {
-                player.board.wall.forEach((tile, idx) => {
-                    const row = Math.floor(idx / 5);
-                    const col = idx % 5;
-                    if (row < 5 && col < 5 && tile != null) {
-                        wall[row][col] = Number(tile) || null;
-                    }
-                });
-            }
-            let penaltyLine = player.board.floorLine?.map(f => f.hasTile ? f.type : null) || Array(7).fill(null);
+        // Stop polling om conflicten te voorkomen
+        stopPolling();
 
-            console.log(`Processing player ${player.name}, initial wall:`, wall);
+        // Notificeer de speler dat de ronde is afgelopen
+        showNotification('Ronde geëindigd! Wacht op serverupdate...');
 
-            patternLines.forEach((line, rowIndex) => {
-                if (line.isComplete) {
-                    const tileType = line.tileType;
-                    const colIndex = getWallPosition(rowIndex, tileType);
-                    console.log(`Pattern line ${rowIndex} complete for ${player.name}, tileType: ${tileType}, colIndex: ${colIndex}`);
-                    if (colIndex !== -1 && wall[rowIndex][colIndex] === null) {
-                        wall[rowIndex][colIndex] = tileType;
-                        score += calculateScore(wall, rowIndex, colIndex);
-                        console.log(`Placed tile ${tileType} on wall at row ${rowIndex}, col ${colIndex} for player ${player.name}, score added: ${calculateScore(wall, rowIndex, colIndex)}`);
-                    } else {
-                        console.warn(`Cannot place tile ${tileType} at row ${rowIndex}, col ${colIndex} for ${player.name}: colIndex invalid or position occupied`);
-                    }
-                    line.tileType = null;
-                    line.numberOfTiles = 0;
-                    line.isComplete = false;
-                }
-            });
+        // Haal de bijgewerkte game state op van de server
+        const updatedGameData = await fetchGameData(gameId, token);
+        console.log('New game data from server after round end:', JSON.stringify(updatedGameData, null, 2));
 
-            console.log(`Updated wall for ${player.name}:`, wall);
+        // Werk de lokale game state bij
+        currentGameData = updatedGameData;
 
-            let hasCompletedHorizontalLine = false;
-            for (let row = 0; row < 5; row++) {
-                if (wall[row].every(tile => tile !== null)) {
-                    hasCompletedHorizontalLine = true;
-                    score += 2; // Bonus for completed horizontal line
-                    console.log(`Player ${player.name} completed horizontal row ${row}, +2 points`);
-                }
-            }
+        // Werk de UI bij
+        renderBoardsAndFactory(currentGameData);
+        renderScores(currentGameData.players);
+        updateActivePlayerDisplay(currentGameData);
 
-            let hasCompletedVerticalLine = false;
-            for (let col = 0; col < 5; col++) {
-                let allFilled = true;
-                for (let row = 0; row < 5; row++) {
-                    if (wall[row][col] === null) {
-                        allFilled = false;
-                        break;
-                    }
-                }
-                if (allFilled) {
-                    hasCompletedVerticalLine = true;
-                    score += 7; // Bonus for completed vertical line
-                    console.log(`Player ${player.name} completed vertical column ${col}, +7 points`);
-                }
-            }
+        // Controleer of het spel is afgelopen
+        if (currentGameData.hasEnded) {
+            showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
+            await displayFinalScores(gameId, token);
+            return;
+        }
 
-            let hasCompletedColor = false;
-            const tileCounts = {};
-            wall.flat().forEach(tile => {
-                if (tile !== null) {
-                    tileCounts[tile] = (tileCounts[tile] || 0) + 1;
-                    if (tileCounts[tile] === 5) {
-                        hasCompletedColor = true;
-                        score += 10; // Bonus for completing all tiles of a color
-                        console.log(`Player ${player.name} completed all tiles of type ${tile}, +10 points`);
-                    }
-                }
-            });
-
-            gameHasEnded = gameHasEnded || hasCompletedHorizontalLine;
-
-            penaltyLine = Array(7).fill(null);
-
-            return {
-                ...player,
-                score,
-                board: {
-                    ...player.board,
-                    patternLines,
-                    wall: wall.flat(),
-                    floorLine: penaltyLine.map(type => ({ hasTile: type !== null, type })),
-                    penalties: 0
-                }
-            };
-        });
-
-        let nextPlayerId = updatedGameData.playerToPlayId;
+        // Stel de eerste speler voor de volgende ronde in (indien nodig)
         if (firstPlayerNextRound) {
-            nextPlayerId = firstPlayerNextRound;
             console.log(`Setting next round's first player to ${firstPlayerNextRound}`);
             firstPlayerNextRound = null;
         }
 
-        updatedGameData = {
-            ...currentGameData,
-            players,
-            playerToPlayId: nextPlayerId,
-            hasEnded: gameHasEnded,
-            roundNumber: (currentGameData.roundNumber || 0) + 1
-        };
+        showNotification('Nieuwe ronde gestart!');
 
-        console.log('Updated game data before API call:', updatedGameData);
-
-        currentGameData = updatedGameData;
-        renderBoardsAndFactory(currentGameData);
-        renderScores(currentGameData.players);
-        showNotification('Ronde geëindigd! Tegels verplaatst naar wall.');
-
-        const newGameData = await fetchGameData(gameId, token);
-        console.log('New game data from server:', newGameData);
-        currentGameData = newGameData;
-        renderBoardsAndFactory(currentGameData);
-
-        if (gameHasEnded) {
-            showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
-            await displayFinalScores(gameId, token);
-        }
-
+        // Start polling opnieuw
+        startPolling(gameId, token);
     } catch (err) {
         console.error('Fout in handleEndOfRound:', err);
         showNotification('Fout bij verwerken einde ronde: ' + err.message);
         const updatedGameData = await fetchGameData(gameId, token);
         currentGameData = updatedGameData;
         renderBoardsAndFactory(currentGameData);
+        startPolling(gameId, token);
     }
 }
+
 
 function getWallPosition(rowIndex, tileType) {
     const colIndex = wallPatterns[rowIndex].indexOf(tileType);
@@ -950,6 +860,11 @@ function renderScores(players) {
 
 function updateActivePlayerDisplay(gameData) {
     const activePlayer = gameData.players.find(p => p.id === gameData.playerToPlayId);
+    console.log('Updating active player:', {
+        playerToPlayId: gameData.playerToPlayId,
+        activePlayer: activePlayer,
+        players: gameData.players.map(p => ({ id: p.id, name: p.name }))
+    });
     const activePlayerDisplay = document.getElementById('activePlayer');
     if (activePlayerDisplay) {
         activePlayerDisplay.textContent = `Aan de beurt: ${activePlayer?.name || 'Onbekend'}`;
