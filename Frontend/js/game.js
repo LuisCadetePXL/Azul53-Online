@@ -481,8 +481,10 @@ function showTilesToMove(tiles, tileType, fromCenter) {
                         ${selectedTiles.includesStarterTile ? `<br>(Starter tile naar penalty line)` : ''}
                     </button>
                 `;
-    }).join('') : '<p>Geen geldige rijen beschikbaar.</p>'}
-            <button class="row-option" data-row="-1">Plaats in Penalty Line</button>
+    }).join('') : `
+                <p>Geen geldige rijen beschikbaar.</p>
+                <button class="row-option" data-row="-1">Plaats in Penalty Line</button>
+            `}
         </div>
     `;
 
