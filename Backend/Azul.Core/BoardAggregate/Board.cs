@@ -62,10 +62,19 @@ internal class Board : IBoard
         var patternLine = PatternLines[patternLineIndex];
         var tilesWithoutStarter = tilesToAdd.Where(t => t != TileType.StartingTile).ToList();
         if (!tilesWithoutStarter.Any())
-            throw new ArgumentException("No valid tiles provided (all tiles are starter tiles).", nameof(tilesToAdd));
+        {
+            AddTilesToFloorLine(tilesToAdd, tileFactory); // Only starter tiles go to floor line
+            return;
+        }
 
         var tileType = tilesWithoutStarter.First();
         var overflowTiles = new List<TileType>();
+
+        // Check if the pattern line already has a different tile type
+        if (patternLine.TileType != null && patternLine.TileType != tileType)
+        {
+            throw new InvalidOperationException("Cannot add tiles of a different type to the pattern line.");
+        }
 
         // Check if the wall already has a tile of this type in the corresponding row
         for (int k = 0; k < 5; k++)
@@ -73,7 +82,8 @@ internal class Board : IBoard
             var spot = Wall[patternLineIndex, k];
             if (spot.HasTile && spot.Type == tileType)
             {
-                throw new InvalidOperationException("Cannot add tiles to a pattern line when the corresponding wall row already has a tile of that type.");
+                AddTilesToFloorLine(tilesToAdd, tileFactory); // All tiles go to floor line
+                return;
             }
         }
 
