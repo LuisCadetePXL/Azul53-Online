@@ -204,8 +204,22 @@ internal class Board : IBoard
 
     public void CalculateFinalBonusScores()
     {
-        if (HasCompletedHorizontalLine) Score += 2;  // Adjusted to match test expectations
-        if (HasCompletedVerticalLine) Score += 7;   // Adjusted to match test expectations
-        if (HasCompletedAllTilesOfAColor) Score += 10;
+        // Bonus for each completed horizontal line (2 points each)
+        int horizontalLines = Enumerable.Range(0, 5).Count(i => Enumerable.Range(0, 5).All(k => Wall[i, k].HasTile));
+        Score += horizontalLines * 2;
+
+        // Bonus for each completed vertical line (7 points each)
+        int verticalLines = Enumerable.Range(0, 5).Count(k => Enumerable.Range(0, 5).All(i => Wall[i, k].HasTile));
+        Score += verticalLines * 7;
+
+        // Bonus for each completed color (10 points each)
+        foreach (TileType type in Enum.GetValues(typeof(TileType)))
+        {
+            if (type == TileType.StartingTile) continue;
+            if (Wall.Cast<TileSpot>().Count(ts => ts.HasTile && ts.Type == type) == 5)
+            {
+                Score += 10;
+            }
+        }
     }
 }
