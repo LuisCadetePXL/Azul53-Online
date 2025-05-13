@@ -61,14 +61,20 @@ internal class Board : IBoard
 
         var patternLine = PatternLines[patternLineIndex];
         var tilesWithoutStarter = tilesToAdd.Where(t => t != TileType.StartingTile).ToList();
+        var starterTiles = tilesToAdd.Where(t => t == TileType.StartingTile).ToList();
+        var overflowTiles = new List<TileType>(starterTiles); // Start with starter tiles in overflow
+
         if (!tilesWithoutStarter.Any())
         {
             AddTilesToFloorLine(tilesToAdd, tileFactory); // Only starter tiles go to floor line
             return;
         }
 
-        var tileType = tilesWithoutStarter.First();
-        var overflowTiles = new List<TileType>();
+        var tileType = tilesWithoutStarter.Last(); // Use the last non-starter tile type as the valid type
+        if (!tilesWithoutStarter.All(t => t == tileType))
+        {
+            throw new InvalidOperationException("All non-starter tiles must be of the same type.");
+        }
 
         // Check if the pattern line already has a different tile type
         if (patternLine.TileType != null && patternLine.TileType != tileType)
@@ -82,8 +88,7 @@ internal class Board : IBoard
             var spot = Wall[patternLineIndex, k];
             if (spot.HasTile && spot.Type == tileType)
             {
-                AddTilesToFloorLine(tilesToAdd, tileFactory); // All tiles go to floor line
-                return;
+                throw new InvalidOperationException("Cannot add tiles to a pattern line when the corresponding wall row already has a tile of that type.");
             }
         }
 
@@ -101,14 +106,10 @@ internal class Board : IBoard
                 overflowTiles.AddRange(Enumerable.Repeat(tileType, remaining));
         }
 
-        // Add any additional non-starter tiles and starter tiles to overflow
+        // Add any additional non-starter tiles to overflow
         int additionalTiles = tilesWithoutStarter.Count - tilesToAddCount;
         if (additionalTiles > 0)
             overflowTiles.AddRange(tilesWithoutStarter.Skip(tilesToAddCount));
-
-        // Add starter tiles to overflow in their original order
-        var starterTiles = tilesToAdd.Where(t => t == TileType.StartingTile).ToList();
-        overflowTiles.AddRange(starterTiles);
 
         // Place overflow tiles in the floor line
         if (overflowTiles.Any())
