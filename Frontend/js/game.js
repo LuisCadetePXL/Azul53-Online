@@ -796,21 +796,6 @@ async function handleEndOfRound(gameId, token) {
         renderScores(currentGameData.players);
         showNotification('Ronde geëindigd! Tegels verplaatst naar wall.');
 
-        const response = await fetch(`https://localhost:5051/api/Games/${gameId}/end-round`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updatedGameData)
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            console.error('API error in end-round:', error);
-            throw new Error(error.message || 'Fout bij afhandelen einde ronde');
-        }
-
         const newGameData = await fetchGameData(gameId, token);
         console.log('New game data from server:', newGameData);
         currentGameData = newGameData;
