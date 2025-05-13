@@ -29,8 +29,6 @@ internal class Game : IGame
             throw new ArgumentNullException(nameof(tileFactory));
         if (players == null || !players.Any())
             throw new ArgumentException("At least one player is required.", nameof(players));
-        if (players.Length != 2)  // Adjusted to match original constraint
-            throw new ArgumentException("Game requires exactly 2 players.");
 
         Id = id;
         TileFactory = tileFactory;
