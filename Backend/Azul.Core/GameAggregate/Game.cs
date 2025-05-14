@@ -119,6 +119,13 @@ internal class Game : IGame
     {
         if (TileFactory.IsEmpty)
         {
+
+            IPlayer playerWithStartingTile = Players.FirstOrDefault(p => p.HasStartingTile);
+            if (playerWithStartingTile != null)
+            {
+                PlayerToPlayId = playerWithStartingTile.Id;
+            }
+
             // End of round
             foreach (var player in Players)
             {
@@ -140,7 +147,8 @@ internal class Game : IGame
             TileFactory.FillDisplays();
             TileFactory.TableCenter.AddStartingTile();
 
-            PlayerToPlayId = DetermineFirstPlayer(Players);
+            //PlayerToPlayId = DetermineFirstPlayer(Players);
+
             _currentPlayerIndex = Array.FindIndex(Players, p => p.Id == PlayerToPlayId);
         }
         else

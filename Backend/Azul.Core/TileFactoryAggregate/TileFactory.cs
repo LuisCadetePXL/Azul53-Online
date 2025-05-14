@@ -32,7 +32,8 @@ internal class TileFactory : ITileFactory
 
     public IReadOnlyList<TileType> UsedTiles => _usedTiles.AsReadOnly();
 
-    public bool IsEmpty => _displays.All(d => d.IsEmpty) && _tableCenter.IsEmpty && !_usedTiles.Any();
+    public bool IsEmpty => _displays.All(d => d.IsEmpty) && _tableCenter.IsEmpty;
+
 
     public void AddToUsedTiles(TileType tile)
     {

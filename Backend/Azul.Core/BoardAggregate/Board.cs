@@ -134,11 +134,11 @@ internal class Board : IBoard
     {
         for (int i = 0; i < PatternLines.Length; i++)
         {
-            var patternLine = PatternLines[i];
+            IPatternLine patternLine = PatternLines[i];
             if (!patternLine.IsComplete)
                 continue;
 
-            var tileToPlace = patternLine.TileType;
+            TileType? tileToPlace = patternLine.TileType;
             int tileCount = patternLine.NumberOfTiles;
             int wallRow = i;
             int wallCol = -1;
@@ -154,16 +154,16 @@ internal class Board : IBoard
 
             if (wallCol != -1 && !Wall[wallRow, wallCol].HasTile)
             {
-                Wall[wallRow, wallCol].PlaceTile(tileToPlace!.Value);
+                Wall[wallRow, wallCol].PlaceTile(tileToPlace.Value);
                 Score += CalculateWallScore(wallRow, wallCol);
                 patternLine.Clear();
                 for (int j = 0; j < tileCount - 1; j++)
-                    tileFactory.AddToUsedTiles(tileToPlace!.Value);
+                    tileFactory.AddToUsedTiles(tileToPlace.Value);
             }
             else
             {
                 for (int j = 0; j < tileCount; j++)
-                    tileFactory.AddToUsedTiles(tileToPlace!.Value);
+                    tileFactory.AddToUsedTiles(tileToPlace.Value);
                 patternLine.Clear();
             }
         }
@@ -184,20 +184,31 @@ internal class Board : IBoard
 
     private int CalculateWallScore(int row, int col)
     {
-        int score = 1;
-        for (int i = col - 1; i >= 0 && Wall[row, i].HasTile; i--) score++;
-        for (int i = col + 1; i < 5 && Wall[row, i].HasTile; i++) score++;
-        for (int i = row - 1; i >= 0 && Wall[i, col].HasTile; i--) score++;
-        for (int i = row + 1; i < 5 && Wall[i, col].HasTile; i++) score++;
-        return score;
+        int horizontal = 1; 
+        for (int i = col - 1; i >= 0 && Wall[row, i].HasTile; i--) horizontal++;
+        for (int i = col + 1; i < 5 && Wall[row, i].HasTile; i++) horizontal++;
+
+        int vertical = 1;
+        for (int i = row - 1; i >= 0 && Wall[i, col].HasTile; i--) vertical++;
+        for (int i = row + 1; i < 5 && Wall[i, col].HasTile; i++) vertical++;
+
+        if (horizontal > 1 && vertical > 1)
+            return horizontal + vertical;
+        if (horizontal > 1)
+            return horizontal;
+        if (vertical > 1)
+            return vertical;
+
+        return 1;
     }
+
 
     private void CalculateFloorLinePenalty()
     {
         int penalty = 0;
         int tilesOnFloorLine = FloorLine.Count(ts => ts.HasTile);
         for (int i = 0; i < tilesOnFloorLine; i++)
-            penalty += (i < 2) ? 1 : (i < 4) ? 2 : 3;
+            penalty += (i < 2) ? 1 : (i < 5) ? 2 : 3;
         Penalties = penalty;
         Score = Math.Max(0, Score - penalty);
     }
