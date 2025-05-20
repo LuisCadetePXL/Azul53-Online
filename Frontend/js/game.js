@@ -731,37 +731,45 @@ async function handleEndOfRound(gameId, token) {
 }
 
 
-function getWallPosition(rowIndex, tileType) {
-    const colIndex = wallPatterns[rowIndex].indexOf(tileType);
-    console.log(`getWallPosition: row=${rowIndex}, tileType=${tileType}, colIndex=${colIndex}`);
-    return colIndex;
+async function displayFinalScores(gameId, token) {
+    try {
+        const gameData = await fetchGameData(gameId, token);
+        const players = gameData.players;
+
+        const playerScores = players.map(player => ({
+            ...player,
+            finalScore: player.board?.score ?? 0 
+        }));
+
+        const sortedPlayers = [...playerScores].sort((a, b) => b.finalScore - a.finalScore);
+        const maxScore = sortedPlayers[0].finalScore;
+        const winners = sortedPlayers.filter(p => p.finalScore === maxScore);
+
+        const winnerNames = winners.map(p => p.name).join(' & ');
+        const finalScoresText = sortedPlayers.map(p => `${p.name}: ${p.finalScore}`).join('\n');
+
+        const modal = document.createElement('div');
+        modal.className = 'game-end-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Spel Geëindigd!</h2>
+                <p>Winnaar${winners.length > 1 ? 's' : ''}: ${winnerNames}<br><br>Eindscores:<br>${finalScoresText.replace(/\n/g, '<br>')}</p>
+                <button id="returnToLobby">Terug naar Lobby</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('returnToLobby').addEventListener('click', () => {
+            sessionStorage.removeItem('tableId');
+            window.location.href = 'lobby.html';
+        });
+
+    } catch (err) {
+        console.error('Fout bij tonen eindscores:', err);
+        showNotification('Fout bij tonen eindscores');
+    }
 }
 
-function calculateScore(wall, row, col) {
-    let score = 1;
-
-    // Horizontal scoring
-    let hCount = 1;
-    for (let c = col - 1; c >= 0 && wall[row][c] !== null; c--) hCount++;
-    for (let c = col + 1; c < 5 && wall[row][c] !== null; c++) hCount++;
-    if (hCount > 1) {
-        score += hCount;
-    } else {
-        score += 1;
-    }
-
-    // Vertical scoring
-    let vCount = 1;
-    for (let r = row - 1; r >= 0 && wall[r][col] !== null; r--) vCount++;
-    for (let r = row + 1; r < 5 && wall[r][col] !== null; r--) vCount++;
-    if (vCount > 1) {
-        score += vCount;
-    } else if (hCount === 1) {
-        score = 1;
-    }
-
-    return score;
-}
 
 function updatePatternLineUI(playerId, rowIndex, tilesArray) {
     const board = document.querySelector(`.board[data-player-id="${playerId}"]`);
@@ -834,8 +842,17 @@ async function fetchGameData(gameId, token) {
             throw new Error(error.message || 'Fout bij ophalen gameData');
         }
         const gameData = await res.json();
-        // Validate wall data format
+        // Validate game data
+        if (!gameData?.players || !Array.isArray(gameData.players)) {
+            throw new Error('Ongeldige gameData: geen spelers array');
+        }
         gameData.players.forEach(player => {
+            if (!player?.board) {
+                console.warn(`Geen board data voor speler ${player.id}`);
+            } else if (typeof player.board.score !== 'number') {
+                console.warn(`Ongeldige score voor speler ${player.id}:`, player.board.score);
+                player.board.score = 0; // Fallback to 0
+            }
             if (player.board?.wall && (!Array.isArray(player.board.wall) || player.board.wall.length !== 5 || !player.board.wall.every(row => Array.isArray(row) && row.length === 5))) {
                 console.warn(`Unexpected wall format for player ${player.id}:`, player.board.wall);
             }
@@ -866,8 +883,9 @@ function renderScores(players) {
         const playerScore = document.createElement('div');
         playerScore.className = 'player-score';
         playerScore.dataset.playerId = player.id;
-        const score = localScores.get(player.id) || 0; // Use local score
-        playerScore.textContent = `${player.name}: ${score}`;
+
+        playerScore.textContent = `${player.name}: ${player.board?.score ?? 0}`; 
+      
         scorePanel.appendChild(playerScore);
     });
 
