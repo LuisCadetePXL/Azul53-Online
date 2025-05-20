@@ -757,69 +757,24 @@ async function displayFinalScores(gameId, token) {
         const gameData = await fetchGameData(gameId, token);
         const players = gameData.players;
 
-        const playerScores = players.map(player => {
-            let bonus = 0;
-            let horizontalLines = 0;
-            let wall = Array(5).fill().map(() => Array(5).fill(null));
-            if (player.board?.wall && Array.isArray(player.board.wall) && player.board.wall.length === 5 && player.board.wall.every(row => Array.isArray(row) && row.length === 5)) {
-                wall = player.board.wall.map(row => row.map(cell => cell.hasTile ? Number(cell.type) : null));
-                localWallStates.set(player.id, wall);
-            } else {
-                console.warn(`Invalid wall data for player ${player.id} in final scores, using local state`);
-                wall = localWallStates.get(player.id) || wall;
-            }
-
-            for (let row = 0; row < 5; row++) {
-                if (wall[row].every(tile => tile !== null)) {
-                    bonus += 2;
-                    horizontalLines++;
-                }
-            }
-
-            for (let col = 0; col < 5; col++) {
-                if (wall.every(row => row[col] !== null)) {
-                    bonus += 7;
-                }
-            }
-
-            const tileCounts = {};
-            wall.flat().forEach(tile => {
-                if (tile !== null) tileCounts[tile] = (tileCounts[tile] || 0) + 1;
-            });
-            Object.values(tileCounts).forEach(count => {
-                if (count === 5) bonus += 10;
-            });
-
-            return {
-                ...player,
-                finalScore: (player.score || 0) + bonus,
-                horizontalLines
-            };
-        });
+        const playerScores = players.map(player => ({
+            ...player,
+            finalScore: player.board?.score ?? 0 // Use backend score
+        }));
 
         const sortedPlayers = [...playerScores].sort((a, b) => b.finalScore - a.finalScore);
         const maxScore = sortedPlayers[0].finalScore;
-        const topPlayers = sortedPlayers.filter(p => p.finalScore === maxScore);
-
-        let winners;
-        if (topPlayers.length === 1) {
-            winners = [topPlayers[0]];
-        } else {
-            const maxHorizontal = Math.max(...topPlayers.map(p => p.horizontalLines));
-            winners = topPlayers.filter(p => p.horizontalLines === maxHorizontal);
-        }
+        const winners = sortedPlayers.filter(p => p.finalScore === maxScore);
 
         const winnerNames = winners.map(p => p.name).join(' & ');
-        const finalScoresText = sortedPlayers.map(p => `${p.name}: ${p.finalScore} (Horizontale lijnen: ${p.horizontalLines})`).join('\n');
-
-        const message = `Spel geëindigd!\nWinnaar${winners.length > 1 ? 's' : ''}: ${winnerNames}\n\nEindscores:\n${finalScoresText}`;
+        const finalScoresText = sortedPlayers.map(p => `${p.name}: ${p.finalScore}`).join('\n');
 
         const modal = document.createElement('div');
         modal.className = 'game-end-modal';
         modal.innerHTML = `
             <div class="modal-content">
                 <h2>Spel Geëindigd!</h2>
-                <p>${message.replace(/\n/g, '<br>')}</p>
+                <p>Winnaar${winners.length > 1 ? 's' : ''}: ${winnerNames}<br><br>Eindscores:<br>${finalScoresText.replace(/\n/g, '<br>')}</p>
                 <button id="returnToLobby">Terug naar Lobby</button>
             </div>
         `;
@@ -834,22 +789,6 @@ async function displayFinalScores(gameId, token) {
         console.error('Fout bij tonen eindscores:', err);
         showNotification('Fout bij tonen eindscores');
     }
-}
-
-function calculateScore(wall, row, col) {
-    let score = 1;
-
-    let hCount = 1;
-    for (let c = col - 1; c >= 0 && wall[row][c] !== null; c--) hCount++;
-    for (let c = col + 1; c < 5 && wall[row][c] !== null; c++) hCount++;
-    if (hCount > 1) score += hCount - 1;
-
-    let vCount = 1;
-    for (let r = row - 1; r >= 0 && wall[r][col] !== null; r--) vCount++;
-    for (let r = row + 1; r < 5 && wall[r][col] !== null; r++) vCount++;
-    if (vCount > 1) score += vCount - 1;
-
-    return score;
 }
 
 function updatePatternLineUI(playerId, rowIndex, tilesArray) {
@@ -923,8 +862,17 @@ async function fetchGameData(gameId, token) {
             throw new Error(error.message || 'Fout bij ophalen gameData');
         }
         const gameData = await res.json();
-        // Validate wall data format
+        // Validate game data
+        if (!gameData?.players || !Array.isArray(gameData.players)) {
+            throw new Error('Ongeldige gameData: geen spelers array');
+        }
         gameData.players.forEach(player => {
+            if (!player?.board) {
+                console.warn(`Geen board data voor speler ${player.id}`);
+            } else if (typeof player.board.score !== 'number') {
+                console.warn(`Ongeldige score voor speler ${player.id}:`, player.board.score);
+                player.board.score = 0; // Fallback to 0
+            }
             if (player.board?.wall && (!Array.isArray(player.board.wall) || player.board.wall.length !== 5 || !player.board.wall.every(row => Array.isArray(row) && row.length === 5))) {
                 console.warn(`Unexpected wall format for player ${player.id}:`, player.board.wall);
             }
@@ -953,7 +901,9 @@ function renderScores(players) {
 
     players.forEach(player => {
         const playerScore = document.createElement('div');
-        playerScore.textContent = `${player.name}: ${player.score ?? 0}`;
+        playerScore.className = 'player-score';
+        playerScore.dataset.playerId = player.id;
+        playerScore.textContent = `${player.name}: ${player.board?.score ?? 0}`; // Use backend score
         scorePanel.appendChild(playerScore);
     });
 }
