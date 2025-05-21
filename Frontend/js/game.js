@@ -130,13 +130,6 @@ async function loadAndRenderGame(gameId, token) {
             return;
         }
 
-        // Initialize local scores for players
-        gameData.players.forEach(player => {
-            if (!localScores.has(player.id)) {
-                localScores.set(player.id, player.score || 0);
-            }
-        });
-
         renderBoardsAndFactory(gameData);
         renderScores(gameData.players);
 
@@ -187,17 +180,16 @@ function renderBoardsAndFactory(gameData) {
             return { tiles };
         });
 
+        // Parse wall data from backend (5x5 array of { hasTile, type })
         let wall = Array(5).fill().map(() => Array(5).fill(null));
-        if (player.board?.wall && Array.isArray(player.board.wall)) {
-            player.board.wall.forEach((tile, idx) => {
-                const row = Math.floor(idx / 5);
-                const col = idx % 5;
-                if (row < 5 && col < 5 && tile != null) {
-                    wall[row][col] = Number(tile) || null;
-                }
-            });
+        if (player.board?.wall && Array.isArray(player.board.wall) && player.board.wall.length === 5 && player.board.wall.every(row => Array.isArray(row) && row.length === 5)) {
+            wall = player.board.wall.map(row => row.map(cell => cell.hasTile ? Number(cell.type) : null));
+            localWallStates.set(player.id, wall); // Sync local state with backend
+        } else {
+            console.warn(`Invalid or missing wall data for player ${player.id}, using local state:`, player.board?.wall);
+            wall = localWallStates.get(player.id) || wall;
+            localWallStates.set(player.id, wall); // Ensure local state exists
         }
-        console.log(`Wall voor speler ${player.name}:`, wall);
 
         const penaltyLine = player.board?.floorLine?.map(f => f.hasTile ? f.type : null) || Array(7).fill(null);
         const penalties = player.board?.floorLine?.filter(p => p.hasTile).length || 0;
@@ -694,14 +686,45 @@ async function handleEndOfRound(gameId, token) {
         const backendGameData = await fetchGameData(gameId, token);
         console.log('Updated game data after round:', backendGameData);
 
-        // Haal de bijgewerkte game state op van de server
-        const updatedGameData = await fetchGameData(gameId, token);
-        console.log('New game data from server after round end:', JSON.stringify(updatedGameData, null, 2));
+        // Update local wall states from backend data
+        backendGameData.players.forEach(player => {
+            let wall = Array(5).fill().map(() => Array(5).fill(null));
+            if (player.board?.wall && Array.isArray(player.board.wall) && player.board.wall.length === 5 && player.board.wall.every(row => Array.isArray(row) && row.length === 5)) {
+                wall = player.board.wall.map(row => row.map(cell => cell.hasTile ? Number(cell.type) : null));
+                localWallStates.set(player.id, wall);
+            } else {
+                console.warn(`Invalid wall data for player ${player.id}, retaining local state`);
+                wall = localWallStates.get(player.id) || wall;
+                localWallStates.set(player.id, wall);
+            }
+        });
 
-        // Werk de lokale game state bij
-        currentGameData = updatedGameData;
+        // Update UI for pattern lines and floor lines based on backend data
+        backendGameData.players.forEach(player => {
+            const patternLines = player.board.patternLines || [];
+            for (let rowIndex = 0; rowIndex < 5; rowIndex++) {
+                const line = patternLines[rowIndex] || { numberOfTiles: 0, tileType: null };
+                if (!line.numberOfTiles) {
+                    updatePatternLineUI(player.id, rowIndex, Array(rowIndex + 1).fill(null));
+                } else {
+                    const tilesArray = Array(rowIndex + 1).fill(null);
+                    for (let i = 0; i < line.numberOfTiles; i++) {
+                        tilesArray[tilesArray.length - 1 - i] = line.tileType;
+                    }
+                    updatePatternLineUI(player.id, rowIndex, tilesArray);
+                }
+            }
+            const floorLine = player.board.floorLine?.map(f => f.hasTile ? f.type : null) || Array(7).fill(null);
+            updatePenaltyLineUI(player.id, floorLine);
+            const penalties = player.board.floorLine?.filter(f => f.hasTile).length || 0;
+            document.querySelector(`#penalty-line-${player.id} + .penalties`).textContent = `Penalties: ${penalties}`;
+        });
 
-        // Werk de UI bij
+        currentGameData = {
+            ...currentGameData,
+            ...backendGameData
+        };
+
         renderBoardsAndFactory(currentGameData);
         renderScores(currentGameData.players);
         updateActivePlayerDisplay(currentGameData);
@@ -714,8 +737,7 @@ async function handleEndOfRound(gameId, token) {
 
         showNotification('Nieuwe ronde gestart!');
         if (firstPlayerNextRound) {
-            console.log(`Setting nächste ronde's eerste speler naar ${firstPlayerNextRound}`);
-            currentGameData.playerToPlayId = firstPlayerNextRound;
+            console.log(`Setting next round's first player to ${firstPlayerNextRound}`);
             firstPlayerNextRound = null;
         }
 
@@ -731,30 +753,74 @@ async function handleEndOfRound(gameId, token) {
     }
 }
 
-
 async function displayFinalScores(gameId, token) {
     try {
         const gameData = await fetchGameData(gameId, token);
         const players = gameData.players;
 
-        const playerScores = players.map(player => ({
-            ...player,
-            finalScore: player.board?.score ?? 0 
-        }));
+        const playerScores = players.map(player => {
+            let bonus = 0;
+            let horizontalLines = 0;
+            let wall = Array(5).fill().map(() => Array(5).fill(null));
+            if (player.board?.wall && Array.isArray(player.board.wall) && player.board.wall.length === 5 && player.board.wall.every(row => Array.isArray(row) && row.length === 5)) {
+                wall = player.board.wall.map(row => row.map(cell => cell.hasTile ? Number(cell.type) : null));
+                localWallStates.set(player.id, wall);
+            } else {
+                console.warn(`Invalid wall data for player ${player.id} in final scores, using local state`);
+                wall = localWallStates.get(player.id) || wall;
+            }
+
+            for (let row = 0; row < 5; row++) {
+                if (wall[row].every(tile => tile !== null)) {
+                    bonus += 2;
+                    horizontalLines++;
+                }
+            }
+
+            for (let col = 0; col < 5; col++) {
+                if (wall.every(row => row[col] !== null)) {
+                    bonus += 7;
+                }
+            }
+
+            const tileCounts = {};
+            wall.flat().forEach(tile => {
+                if (tile !== null) tileCounts[tile] = (tileCounts[tile] || 0) + 1;
+            });
+            Object.values(tileCounts).forEach(count => {
+                if (count === 5) bonus += 10;
+            });
+
+            return {
+                ...player,
+                finalScore: (player.score || 0) + bonus,
+                horizontalLines
+            };
+        });
 
         const sortedPlayers = [...playerScores].sort((a, b) => b.finalScore - a.finalScore);
         const maxScore = sortedPlayers[0].finalScore;
-        const winners = sortedPlayers.filter(p => p.finalScore === maxScore);
+        const topPlayers = sortedPlayers.filter(p => p.finalScore === maxScore);
+
+        let winners;
+        if (topPlayers.length === 1) {
+            winners = [topPlayers[0]];
+        } else {
+            const maxHorizontal = Math.max(...topPlayers.map(p => p.horizontalLines));
+            winners = topPlayers.filter(p => p.horizontalLines === maxHorizontal);
+        }
 
         const winnerNames = winners.map(p => p.name).join(' & ');
-        const finalScoresText = sortedPlayers.map(p => `${p.name}: ${p.finalScore}`).join('\n');
+        const finalScoresText = sortedPlayers.map(p => `${p.name}: ${p.finalScore} (Horizontale lijnen: ${p.horizontalLines})`).join('\n');
+
+        const message = `Spel geëindigd!\nWinnaar${winners.length > 1 ? 's' : ''}: ${winnerNames}\n\nEindscores:\n${finalScoresText}`;
 
         const modal = document.createElement('div');
         modal.className = 'game-end-modal';
         modal.innerHTML = `
             <div class="modal-content">
                 <h2>Spel Geëindigd!</h2>
-                <p>Winnaar${winners.length > 1 ? 's' : ''}: ${winnerNames}<br><br>Eindscores:<br>${finalScoresText.replace(/\n/g, '<br>')}</p>
+                <p>${message.replace(/\n/g, '<br>')}</p>
                 <button id="returnToLobby">Terug naar Lobby</button>
             </div>
         `;
@@ -771,6 +837,21 @@ async function displayFinalScores(gameId, token) {
     }
 }
 
+function calculateScore(wall, row, col) {
+    let score = 1;
+
+    let hCount = 1;
+    for (let c = col - 1; c >= 0 && wall[row][c] !== null; c--) hCount++;
+    for (let c = col + 1; c < 5 && wall[row][c] !== null; c++) hCount++;
+    if (hCount > 1) score += hCount - 1;
+
+    let vCount = 1;
+    for (let r = row - 1; r >= 0 && wall[r][col] !== null; r--) vCount++;
+    for (let r = row + 1; r < 5 && wall[r][col] !== null; r++) vCount++;
+    if (vCount > 1) score += vCount - 1;
+
+    return score;
+}
 
 function updatePatternLineUI(playerId, rowIndex, tilesArray) {
     const board = document.querySelector(`.board[data-player-id="${playerId}"]`);
@@ -843,17 +924,8 @@ async function fetchGameData(gameId, token) {
             throw new Error(error.message || 'Fout bij ophalen gameData');
         }
         const gameData = await res.json();
-        // Validate game data
-        if (!gameData?.players || !Array.isArray(gameData.players)) {
-            throw new Error('Ongeldige gameData: geen spelers array');
-        }
+        // Validate wall data format
         gameData.players.forEach(player => {
-            if (!player?.board) {
-                console.warn(`Geen board data voor speler ${player.id}`);
-            } else if (typeof player.board.score !== 'number') {
-                console.warn(`Ongeldige score voor speler ${player.id}:`, player.board.score);
-                player.board.score = 0; // Fallback to 0
-            }
             if (player.board?.wall && (!Array.isArray(player.board.wall) || player.board.wall.length !== 5 || !player.board.wall.every(row => Array.isArray(row) && row.length === 5))) {
                 console.warn(`Unexpected wall format for player ${player.id}:`, player.board.wall);
             }
@@ -882,6 +954,9 @@ function renderScores(players) {
 
     players.forEach(player => {
         const playerScore = document.createElement('div');
+
+        playerScore.textContent = `${player.name}: ${player.score ?? 0}`;
+      
         playerScore.className = 'player-score';
         playerScore.dataset.playerId = player.id;
 
@@ -890,8 +965,6 @@ function renderScores(players) {
       
         scorePanel.appendChild(playerScore);
     });
-
-    console.log('Rendered scores:', players.map(p => ({ name: p.name, score: localScores.get(p.id) || 0 })));
 }
 
 function updateActivePlayerDisplay(gameData) {
