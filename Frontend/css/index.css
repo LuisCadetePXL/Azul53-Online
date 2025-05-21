@@ -2,65 +2,92 @@ body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(to right, #6a11cb, #2575fc);
+    background-image: url('../images/woodenBackground.png');
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
 }
 
 .navbar {
     display: flex;
     justify-content: center;
-    background-color: #333;
-    padding: 10px;
+    background-color: #003366;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .navbar a {
     color: white;
     text-decoration: none;
     padding: 10px 20px;
-    margin: 0 10px;
+    margin: 0 15px;
     border-radius: 5px;
+    transition: background-color 0.3s;
 }
 
 .navbar a:hover {
     background-color: #555;
 }
-
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 80vh;
     width: 100%;
-    position: relative;
+    max-width: 1000px;
+    margin-top: 100px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 40px;
+    box-sizing: border-box;
 }
 
 .image-container {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: -1;
-}
+     flex: 1 1 300px;
+     max-width: 400px;
+ }
 
 .login-image {
-    max-width: 250px;
+    width: 100%;
+    max-width: 100%;
     height: auto;
-    opacity: 0.8;
+    opacity: 0.9;
+    border-radius: 10px;
 }
 
 .form-card {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     text-align: center;
-    width: 350px;
+    width: 100%;
+    max-width: 300px;
+    flex: 0 0 300px;
+    box-sizing: border-box;
+}
+
+.form-card h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 15px;
 }
 
 input {
     width: 100%;
     padding: 10px;
-    margin: 10px 0;
+    margin: 8px 0;
     border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
 }
 
 button {
@@ -71,6 +98,7 @@ button {
     cursor: pointer;
     border-radius: 5px;
     width: 100%;
+    font-size: 1rem;
 }
 
 button:hover {
@@ -80,4 +108,20 @@ button:hover {
 .error-message {
     color: red;
     margin-top: 10px;
+    font-size: 0.9rem;
+}
+@media screen and (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        align-items: center;
+        max-width: 100%;
+    }
+
+    .image-container {
+        max-width: 90%;
+    }
+
+    .login-image {
+        max-width: 100%;
+    }
 }

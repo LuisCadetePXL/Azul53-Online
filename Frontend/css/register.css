@@ -2,7 +2,7 @@ body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(to right, #6a11cb, #2575fc);
+    background-image: url('../images/woodenBackground.png');
     display: flex;
     justify-content: center;
     align-items: center;
@@ -13,7 +13,7 @@ body {
 .navbar {
     display: flex;
     justify-content: center;
-    background-color: #333;
+    background-color: #003366;
     width: 100%;
     position: absolute;
     top: 0;
@@ -31,7 +31,7 @@ body {
 }
 
 .navbar a:hover {
-    background-color: #555;
+    background-color: dodgerblue;
 }
 
 .register-container {
