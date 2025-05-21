@@ -30,6 +30,7 @@ let selectedTiles = {
 let pollingInterval = null;
 let firstPlayerNextRound = null;
 let localWallStates = new Map(); // Fallback for wall state if backend fails
+let localScores = new Map(); 
 
 // Azul wall pattern
 const wallPatterns = [
@@ -953,7 +954,15 @@ function renderScores(players) {
 
     players.forEach(player => {
         const playerScore = document.createElement('div');
+
         playerScore.textContent = `${player.name}: ${player.score ?? 0}`;
+      
+        playerScore.className = 'player-score';
+        playerScore.dataset.playerId = player.id;
+
+        const score = (player.board && typeof player.board.score === 'number') ? player.board.score : 0;
+        playerScore.textContent = `${player.name}: ${score}`;
+      
         scorePanel.appendChild(playerScore);
     });
 }
