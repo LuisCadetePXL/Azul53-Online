@@ -837,22 +837,6 @@ async function displayFinalScores(gameId, token) {
     }
 }
 
-function calculateScore(wall, row, col) {
-    let score = 1;
-
-    let hCount = 1;
-    for (let c = col - 1; c >= 0 && wall[row][c] !== null; c--) hCount++;
-    for (let c = col + 1; c < 5 && wall[row][c] !== null; c++) hCount++;
-    if (hCount > 1) score += hCount - 1;
-
-    let vCount = 1;
-    for (let r = row - 1; r >= 0 && wall[r][col] !== null; r--) vCount++;
-    for (let r = row + 1; r < 5 && wall[r][col] !== null; r++) vCount++;
-    if (vCount > 1) score += vCount - 1;
-
-    return score;
-}
-
 function updatePatternLineUI(playerId, rowIndex, tilesArray) {
     const board = document.querySelector(`.board[data-player-id="${playerId}"]`);
     const patternRow = board?.querySelector(`.pattern-row[data-row-index="${rowIndex}"]`);
