@@ -321,6 +321,14 @@ function setupTileSelection() {
         }
 
         const tileImg = e.target;
+        const tileType = parseInt(tileImg.dataset.tileType);
+
+        // Prevent selection of the starter tile (tileType 0)
+        if (tileType === 0) {
+            showNotification('De starttegel kan niet worden geselecteerd!');
+            return;
+        }
+
         const factoryCircle = tileImg.closest('.circle');
 
         if (!factoryCircle) return;
@@ -332,7 +340,6 @@ function setupTileSelection() {
 
         const token = sessionStorage.getItem('token');
         const gameId = document.getElementById('gameIdValue').textContent;
-        const tileType = parseInt(tileImg.dataset.tileType);
         const fromCenter = factoryCircle.classList.contains('center-circle');
         const factoryId = factoryCircle.dataset.factoryId;
 
