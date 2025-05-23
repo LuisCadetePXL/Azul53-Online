@@ -450,6 +450,28 @@ function showTilesToMove(tiles, tileType, fromCenter) {
 
     let tilesToPlace = tiles.length;
 
+    let rowOptionsHTML = '';
+    if (validRows.length > 0) {
+        rowOptionsHTML = validRows.map(row => {
+            const excessTiles = tilesToPlace > row.availableSlots ? tilesToPlace - row.availableSlots : 0;
+            return `
+                <button class="row-option" data-row="${row.index}">
+                    Plaats in Rij ${row.index + 1} (${row.availableSlots} slot(s) beschikbaar)
+                    ${excessTiles > 0 ? `<br>(${excessTiles} tegel(s) naar penalty line)` : ''}
+                    ${selectedTiles.includesStarterTile ? `<br>(Starter tile naar penalty line)` : ''}
+                </button>
+            `;
+        }).join('');
+    } else {
+        // No valid pattern lines, offer floor line placement
+        rowOptionsHTML = `
+            <button class="row-option" data-row="-1">
+                Plaats in Floor Line
+                ${selectedTiles.includesStarterTile ? `<br>(Starter tile naar penalty line)` : ''}
+            </button>
+        `;
+    }
+
     moveContainer.innerHTML = `
         <div class="tiles-preview">
             ${Array.from({ length: tiles.length }, () =>
@@ -458,17 +480,8 @@ function showTilesToMove(tiles, tileType, fromCenter) {
             ${fromCenter && selectedTiles.includesStarterTile ? `<img src="${tileTypeToImage.getImage(0)}" class="tile-image" alt="Starter Tile">` : ''}
         </div>
         <div class="row-options">
-            ${validRows.map(row => {
-        const excessTiles = tilesToPlace > row.availableSlots ? tilesToPlace - row.availableSlots : 0;
-        return `
-                    <button class="row-option" data-row="${row.index}">
-                        Plaats in Rij ${row.index + 1} (${row.availableSlots} slot(s) beschikbaar)
-                        ${excessTiles > 0 ? `<br>(${excessTiles} tegel(s) naar penalty line)` : ''}
-                        ${selectedTiles.includesStarterTile ? `<br>(Starter tile naar penalty line)` : ''}
-                    </button>
-                `;
-    }).join('')}
-            <button class="row-option" data-row="-1">Cancel</button>
+            ${rowOptionsHTML}
+            <button class="row-option" data-action="cancel">Cancel</button>
         </div>
     `;
 
@@ -478,10 +491,43 @@ function showTilesToMove(tiles, tileType, fromCenter) {
 function setupSelectionEventListeners() {
     document.addEventListener('click', async (e) => {
         if (e.target.classList.contains('row-option')) {
-            const rowIndex = parseInt(e.target.dataset.row);
-            await placeTilesOnPatternLine(rowIndex);
+            if (e.target.dataset.action === 'cancel') {
+                cancelSelection();
+            } else {
+                const rowIndex = parseInt(e.target.dataset.row);
+                await placeTilesOnPatternLine(rowIndex);
+            }
         }
     });
+}
+
+function cancelSelection() {
+    const token = sessionStorage.getItem('token');
+    const gameId = document.getElementById('gameIdValue').textContent;
+
+    const factoryCircle = document.querySelector(`.circle[data-factory-id="${selectedTiles.factoryId}"] .tile-grid`);
+    const centerCircle = document.querySelector('.center-circle .tile-grid');
+    const originalGrid = selectedTiles.fromCenter ? centerCircle : factoryCircle;
+
+    selectedTiles.selectedTileElements.forEach(tile => {
+        tile.classList.remove('selected');
+        originalGrid.appendChild(tile);
+    });
+
+    if (!selectedTiles.fromCenter && selectedTiles.tilesMovedToCenter.length > 0) {
+        selectedTiles.tilesMovedToCenter.forEach(tile => {
+            tile.classList.remove('selected');
+            factoryCircle.appendChild(tile);
+        });
+    }
+
+    const moveContainer = document.querySelector('.tiles-to-move-container');
+    if (moveContainer) moveContainer.remove();
+
+    resetSelection();
+
+    showNotification('Selectie geannuleerd');
+    startPolling(gameId, token);
 }
 
 async function placeTilesOnPatternLine(rowIndex) {
@@ -496,33 +542,6 @@ async function placeTilesOnPatternLine(rowIndex) {
     }
 
     stopPolling();
-
-    if (rowIndex === -1) {
-        const factoryCircle = document.querySelector(`.circle[data-factory-id="${selectedTiles.factoryId}"] .tile-grid`);
-        const centerCircle = document.querySelector('.center-circle .tile-grid');
-        const originalGrid = selectedTiles.fromCenter ? centerCircle : factoryCircle;
-
-        selectedTiles.selectedTileElements.forEach(tile => {
-            tile.classList.remove('selected');
-            originalGrid.appendChild(tile);
-        });
-
-        if (!selectedTiles.fromCenter && selectedTiles.tilesMovedToCenter.length > 0) {
-            selectedTiles.tilesMovedToCenter.forEach(tile => {
-                tile.classList.remove('selected');
-                factoryCircle.appendChild(tile);
-            });
-        }
-
-        const moveContainer = document.querySelector('.tiles-to-move-container');
-        if (moveContainer) moveContainer.remove();
-
-        resetSelection();
-
-        showNotification('Selectie geannuleerd');
-        startPolling(gameId, token);
-        return;
-    }
 
     try {
         const takeTilesResponse = await fetch(`https://localhost:5051/api/Games/${gameId}/take-tiles`, {
@@ -700,7 +719,7 @@ function isRoundOver(gameData) {
 
 async function handleEndOfRound(gameId, token) {
     try {
-        console.log('Starting handleEndbawOfRound for gameId:', gameId);
+        console.log('Starting handleEndOfRound for gameId:', gameId);
 
         stopPolling();
 
