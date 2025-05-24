@@ -493,5 +493,62 @@ main {
         }
 
 .placed-tile {
-    opacity: 1 !important; /* Ensure placed tiles remain fully visible */
+    opacity: 1 !important;
 }
+
+/* Nieuwe stijlen voor de chat */
+.chat-panel {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+}
+
+.chat-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.chat-messages {
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+    .chat-messages p {
+        margin: 4px 0;
+        font-size: 0.9rem;
+    }
+
+        .chat-messages p span {
+            font-weight: bold;
+            color: #007acc;
+        }
+
+chat-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-input input {
+    width: 100%;
+}
+
+.chat-input button {
+    width: 100%;
+    padding: 8px 0;
+    background-color: green;
+    color: white;
+    border-radius: 2px;
+    margin: 7px 0;
+}
+
+    .chat-input button:hover {
+        background-color: #45a049;
+    }
