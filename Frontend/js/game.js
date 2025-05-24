@@ -41,6 +41,9 @@ const wallPatterns = [
     [11, 12, 13, 14, 15]
 ];
 
+// SignalR connection
+let connection = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = sessionStorage.getItem('token');
     const tableId = sessionStorage.getItem('tableId');
@@ -59,20 +62,122 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await loadAndRenderGame(gameId, token);
 
+        // Start SignalR connection
+        await startSignalRConnection(gameId, token);
+
+        // Start polling (als fallback, kan worden uitgeschakeld als je volledig op SignalR wilt vertrouwen)
         startPolling(gameId, token);
 
         setupTileSelection();
         setupSelectionEventListeners();
+        setupChat();
     } catch (err) {
         console.error('Initialisatie fout:', err);
         showNotification('Fout bij laden van het spel');
     }
 
-    document.getElementById('leave').addEventListener('click', () => {
+    document.getElementById('leave').addEventListener('click', async () => {
         stopPolling();
+        await stopSignalRConnection();
         leaveTable(token, tableId);
     });
 });
+
+async function startSignalRConnection(gameId, token) {
+    connection = new signalR.HubConnectionBuilder()
+        .withUrl(`https://localhost:5051/chathub`, {
+            accessTokenFactory: () => token
+        })
+        .withAutomaticReconnect()
+        .build();
+
+    // Handle inkomende chatberichten
+    connection.on("ReceiveMessage", (user, message) => {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageElement = document.createElement('p');
+        messageElement.innerHTML = `<span>${user}</span>: ${message}`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll naar het nieuwste bericht
+    });
+
+    // Handle spelstatusupdates (voor real-time updates in plaats van polling)
+    connection.on("GameUpdated", (gameData) => {
+        if (!gameData) {
+            console.error('Geen speldata ontvangen via SignalR');
+            showNotification('Fout: Geen speldata ontvangen');
+            return;
+        }
+        currentGameData = gameData;
+
+        renderBoardsAndFactory(gameData);
+        renderScores(gameData.players);
+        updateActivePlayerDisplay(gameData);
+
+        if (isRoundOver(gameData)) {
+            handleEndOfRound(gameId, token);
+        }
+
+        if (gameData?.hasEnded) {
+            stopPolling();
+            stopSignalRConnection();
+            showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
+            displayFinalScores(gameId, token);
+        }
+    });
+
+    try {
+        await connection.start();
+        console.log('Connected to SignalR');
+        showNotification('Verbonden met chat');
+    } catch (err) {
+        console.error('Fout bij verbinden met SignalR:', err);
+        showNotification('Fout bij verbinden met chat');
+    }
+}
+
+async function stopSignalRConnection() {
+    if (connection) {
+        try {
+            await connection.stop();
+            console.log('SignalR verbinding gestopt');
+        } catch (err) {
+            console.error('Fout bij stoppen SignalR:', err);
+        }
+    }
+}
+
+function setupChat() {
+    const sendButton = document.getElementById('sendChat');
+    const chatInput = document.getElementById('chatInput');
+
+    sendButton.addEventListener('click', async () => {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        try {
+            await connection.invoke("SendMessage", currentUsername, message);
+            chatInput.value = '';
+        } catch (err) {
+            console.error('Fout bij verzenden bericht:', err);
+            showNotification('Fout bij verzenden bericht');
+        }
+    });
+
+    chatInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            try {
+                await connection.invoke("SendMessage", currentUsername, message);
+                chatInput.value = '';
+            } catch (err) {
+                console.error('Fout bij verzenden bericht:', err);
+                showNotification('Fout bij verzenden bericht');
+            }
+        }
+    });
+}
 
 function startPolling(gameId, token) {
     stopPolling();
@@ -463,7 +568,6 @@ function showTilesToMove(tiles, tileType, fromCenter) {
             `;
         }).join('');
     } else {
-        // No valid pattern lines, offer floor line placement
         rowOptionsHTML = `
             <button class="row-option" data-row="-1">
                 Plaats in Floor Line

@@ -5,32 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azul Game</title>
     <link rel="stylesheet" href="css/game.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
 </head>
 <body>
-<div class="title-bar">
-    Game In Progress
-    <button id="leave">Leave</button>
-</div>
-
-<div class="game-info">
-    <div id="gameIdDisplay">Game ID: <span id="gameIdValue">N/A</span></div>
-    <div id="playerName" class="player-name">Speler: N/A</div>
-</div>
-
-<main>
-    <div class="board-area-grid" id="boardsContainer">
-        <!-- Dynamisch ingevuld via JavaScript -->
+    <div class="title-bar">
+        Game In Progress
+        <button id="leave">Leave</button>
     </div>
 
-    <div class="score-panel">
-        <img src="images/azul_titel.png" class="score-title-img" alt="Azul Titel">
-        <div class="score-title">Scores</div>
-        <div id="activePlayer" class="active-player">Aan de beurt: N/A</div>
-        <div id="scorePanel"></div>
-        <div id="roundInfo" class="round-number"></div>
+    <div class="game-info">
+        <div id="gameIdDisplay">Game ID: <span id="gameIdValue">N/A</span></div>
+        <div id="playerName" class="player-name">Speler: N/A</div>
     </div>
-</main>
 
-<script src="js/game.js"></script>
+    <main>
+        <div class="board-area-grid" id="boardsContainer">
+            <!-- Dynamisch ingevuld via JavaScript -->
+        </div>
+
+        <div class="score-panel">
+            <img src="images/azul_titel.png" class="score-title-img" alt="Azul Titel">
+            <div class="score-title">Scores</div>
+            <div id="activePlayer" class="active-player">Aan de beurt: N/A</div>
+            <div id="scorePanel"></div>
+            <div id="roundInfo" class="round-number"></div>
+            <div class="chat-panel">
+                <div class="chat-title">Chat</div>
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Typ een bericht...">
+                    <button id="sendChat">Verzend</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/game.js"></script>
 </body>
 </html>
