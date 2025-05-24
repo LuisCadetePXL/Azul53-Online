@@ -14,6 +14,7 @@ using Azul.Bootstrapper;
 using Azul.Core.BoardAggregate;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Azul.Api.Chat;
 
 namespace Azul.Api
 {
@@ -41,10 +42,16 @@ namespace Azul.Api
                 options.JsonSerializerOptions.Converters.Add(new TwoDimensionalArrayJsonConverter<TileSpotModel>());
             });
 
+            builder.Services.AddSignalR();
+
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll",
-                    policyBuilder => policyBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder => builder
+                        .WithOrigins("http://localhost:63342")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials());
             });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -134,11 +141,13 @@ namespace Azul.Api
                 app.UseSwaggerUI();
             }
 
-            app.UseCors(policyName: "AllowAll");
+            app.UseCors("AllowSpecificOrigin");
 
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+
+            app.MapHub<ChatHub>("/chathub");
 
             app.MapControllers();
 
