@@ -32,6 +32,11 @@ let selectedTiles = {
 let pollingInterval = null;
 let firstPlayerNextRound = null;
 let localWallStates = new Map();
+let backgroundMusic = new Audio('./music/game.mp3');
+backgroundMusic.loop = true;
+let isMusicPlaying = false;
+let winMusic = new Audio('./music/overwinning.mp3');
+let loseMusic = new Audio('./music/verliezer.mp3');
 
 const wallPatterns = [
     [15, 11, 12, 13, 14],
@@ -71,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupTileSelection();
         setupSelectionEventListeners();
         setupChat();
+        setupMusicButton();
     } catch (err) {
         console.error('Initialisatie fout:', err);
         showNotification('Fout bij laden van het spel');
@@ -79,9 +85,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('leave').addEventListener('click', async () => {
         stopPolling();
         await stopSignalRConnection();
+        backgroundMusic.pause(); // Stop music when leaving the game
+        isMusicPlaying = false;
         leaveTable(token, tableId);
     });
 });
+
+function setupMusicButton() {
+    const musicButton = document.getElementById('music'); // Updated to match HTML button ID
+    if (!musicButton) {
+        console.error('Muziek knop niet gevonden');
+        showNotification('Fout: Muziek knop niet gevonden');
+        return;
+    }
+    musicButton.textContent = 'Muziek Aan';
+    musicButton.addEventListener('click', () => {
+        if (isMusicPlaying) {
+            backgroundMusic.pause();
+            isMusicPlaying = false;
+            musicButton.textContent = 'Muziek Aan';
+            showNotification('Muziek uitgezet');
+        } else {
+            backgroundMusic.play().then(() => {
+                isMusicPlaying = true;
+                musicButton.textContent = 'Muziek Uit';
+                showNotification('Muziek aangezet');
+            }).catch(err => {
+                console.error('Fout bij afspelen muziek:', err);
+                showNotification('Fout bij afspelen muziek: ' + err.message);
+            });
+        }
+    });
+}
 
 async function startSignalRConnection(gameId, token) {
     connection = new signalR.HubConnectionBuilder()
@@ -120,6 +155,9 @@ async function startSignalRConnection(gameId, token) {
         if (gameData?.hasEnded) {
             stopPolling();
             stopSignalRConnection();
+            backgroundMusic.pause(); // Stop music when game ends
+            isMusicPlaying = false;
+            document.getElementById('music').textContent = 'Muziek Aan';
             showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
             displayFinalScores(gameId, token);
         }
@@ -200,6 +238,9 @@ function startPolling(gameId, token) {
 
             if (gameData?.hasEnded) {
                 stopPolling();
+                backgroundMusic.pause(); // Stop music when game ends
+                isMusicPlaying = false;
+                document.getElementById('music').textContent = 'Muziek Aan';
                 showNotification('Spel geëindigd! Een speler heeft een horizontale rij voltooid.');
                 await displayFinalScores(gameId, token);
             }
@@ -956,6 +997,21 @@ async function displayFinalScores(gameId, token) {
         const winnerNames = winners.map(p => p.name).join(' & ');
         const finalScoresText = sortedPlayers.map(p => `${p.name}: ${p.finalScore} (Horizontale lijnen: ${p.horizontalTiles})`).join('\n');
 
+        // Stop background music if playing
+        if (isMusicPlaying) {
+            backgroundMusic.pause();
+            isMusicPlaying = false;
+            document.getElementById('music').textContent = 'Muziek Aan';
+        }
+
+        // Play win or lose music based on whether the current player is a winner
+        const isWinner = winners.some(winner => winner.id === currentPlayerId);
+        const musicToPlay = isWinner ? winMusic : loseMusic;
+        musicToPlay.play().catch(err => {
+            console.error('Fout bij afspelen win/lose muziek:', err);
+            showNotification('Fout bij afspelen win/lose muziek: ' + err.message);
+        });
+
         const message = `Spel geëindigd!\nWinnaar${winners.length > 1 ? 's' : ''}: ${winnerNames}\n\nEindscores:\n${finalScoresText}`;
 
         const modal = document.createElement('div');
@@ -980,6 +1036,10 @@ async function displayFinalScores(gameId, token) {
                 window.location.href = 'lobby.html';
                 return;
             }
+            backgroundMusic.pause(); // Stop background music
+            winMusic.pause(); // Stop win music
+            loseMusic.pause(); // Stop lose music
+            isMusicPlaying = false;
             leaveTable(token, tableId);
         });
 

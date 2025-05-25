@@ -8,14 +8,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableIntervals = new Map();
     const playerNameContainer = document.getElementById('playerName');
     const PlayerName = sessionStorage.getItem('username');
+    let lobbyAudio = null; // Definieer lobbyAudio in de globale scope
+
+    console.log('lobbyAudio geïnitialiseerd:', lobbyAudio); // Debug: controleer initiële waarde
 
     playerNameContainer.innerHTML = `${PlayerName}`;
+
+    // Functie om muziek te stoppen
+    function stopLobbyAudio() {
+        if (lobbyAudio) {
+            lobbyAudio.pause();
+            lobbyAudio.currentTime = 0; // Reset naar begin
+            console.log('Muziek gestopt en gereset.');
+        } else {
+            console.log('Geen lobbyAudio beschikbaar om te stoppen.');
+        }
+    }
 
     createTableButton.addEventListener('click', async () => {
         const selectedValue = playerCountSelect.value;
         if (!selectedValue) {
             errorMessage.textContent = "Kies eerst het aantal spelers.";
             return;
+        }
+
+        // Maak een Audio object voor lobby.mp3
+        lobbyAudio = new Audio('music/lobby.mp3');
+        lobbyAudio.loop = true; // Laat het liedje herhalen totdat het wordt gestopt
+        console.log('lobbyAudio aangemaakt:', lobbyAudio); // Debug: controleer creatie
+
+        // Probeer de audio af te spelen
+        try {
+            await lobbyAudio.play();
+            console.log('Lobby muziek wordt afgespeeld.');
+        } catch (error) {
+            console.error('Fout bij het afspelen van lobby.mp3:', error);
+            errorMessage.textContent = "Kan muziek niet afspelen. Controleer of het bestand bestaat en de browser toestemming heeft.";
         }
 
         const request = {
@@ -40,16 +68,61 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tableData = JSON.parse(text);
                     displayTable(tableData);
                     sessionStorage.setItem('tableId', tableData.id);
+
+                    // Start een functie om te checken of een andere speler join
+                    checkForOtherPlayers(tableData.id, lobbyAudio);
                 } else {
                     console.error('Lege response ontvangen.');
+                    stopLobbyAudio();
+                    errorMessage.textContent = "Geen gegevens ontvangen van de server.";
                 }
             } else {
-                console.error('Error response:', response);
+                console.error('Error response:', response.status, response.statusText);
+                stopLobbyAudio();
+                errorMessage.textContent = "Fout bij het aanmaken van de tafel.";
             }
         } catch (error) {
             console.error('Fout bij het zoeken/maken van tafel:', error);
+            stopLobbyAudio();
+            errorMessage.textContent = "Netwerkfout bij het verbinden met de server.";
         }
     });
+
+    // Functie om te checken of een andere speler join
+    async function checkForOtherPlayers(tableId, audio) {
+        try {
+            const checkInterval = setInterval(async () => {
+                const response = await fetch(`https://localhost:5051/api/Tables/${tableId}/players`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const players = await response.json();
+                    console.log('Huidige spelers:', players);
+                    // Als er meer dan 1 speler is (de huidige speler + een andere)
+                    if (players.length > 1) {
+                        if (audio) {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            console.log('Muziek gestopt omdat een andere speler is gejoind.');
+                        }
+                        clearInterval(checkInterval); // Stop met polling
+                    }
+                } else {
+                    console.error('Fout bij het ophalen van spelers:', response.status, response.statusText);
+                }
+            }, 2000); // Check elke 2 seconden
+        } catch (error) {
+            console.error('Fout bij het checken van spelers:', error);
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }
+    }
 
     function displayTable(tableData) {
         if (document.getElementById(`table-${tableData.id}`)) {
@@ -87,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function leaveTable(tableId, tableCard) {
+        console.log('leaveTable aangeroepen, lobbyAudio status:', lobbyAudio); // Debug: controleer lobbyAudio
         try {
             const response = await fetch(`https://localhost:5051/api/Tables/${tableId}/leave`, {
                 method: 'POST',
@@ -109,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tableCard) {
                 tableCard.remove();
             }
+            stopLobbyAudio(); // Stop de muziek expliciet
         }
     }
 
