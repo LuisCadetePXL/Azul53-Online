@@ -21,12 +21,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
-        working-directory: ./Backend
+        run: dotnet build Azul53-Online.sln --configuration Release # Specify the solution/project file
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-        working-directory: ./Backend
+        run: dotnet publish Azul53-Online.sln -c Release -o "${{env.DOTNET_ROOT}}/myapp" # Specify the solution/project file
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -39,18 +37,19 @@ jobs:
     needs: build
     environment:
       name: 'Production'
-
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-
+      
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'azul53-api'
           slot-name: 'Production'
-          package: ${{env.DOTNET_ROOT}}/myapp
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9F80509D108A468EA082EC7BF0304830 }}
