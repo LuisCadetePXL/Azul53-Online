@@ -21,10 +21,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build Azul.sln --configuration Release # Updated to correct solution file
+        run: dotnet build Backend/Azul.sln --configuration Release # Updated to correct path
 
       - name: dotnet publish
-        run: dotnet publish Azul.sln -c Release -o "${{env.DOTNET_ROOT}}/myapp" # Updated to correct solution file
+        run: dotnet publish Backend/Azul.sln -c Release -o "${{env.DOTNET_ROOT}}/myapp" # Updated to correct path
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
