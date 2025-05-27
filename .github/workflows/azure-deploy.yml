@@ -17,15 +17,15 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore Azul.sln
         working-directory: ./Backend
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build Azul.sln --configuration Release --no-restore
         working-directory: ./Backend
 
       - name: Publish
-        run: dotnet publish --configuration Release --no-build --output ./publish
+        run: dotnet publish Azul.sln --configuration Release --no-build --output ./publish
         working-directory: ./Backend
 
       - name: Deploy to Azure Web App
