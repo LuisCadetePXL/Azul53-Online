@@ -51,5 +51,5 @@ jobs:
         with:
           app-name: 'azul53-api'
           slot-name: 'Production'
-          package: .
+          package: ./myapp
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9F80509D108A468EA082EC7BF0304830 }}
